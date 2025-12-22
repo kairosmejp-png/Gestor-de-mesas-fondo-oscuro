@@ -1,0 +1,5 @@
+{
+  "name": "Gestor de Mesas Profesional",
+  "description": "Aplicación offline de gestión de mesas para restaurantes con panel de sumatorias detallado, control de pedidos y múltiples medios de pago.",
+  "requestFramePermissions": []
+}
