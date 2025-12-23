@@ -14,18 +14,39 @@ const App: React.FC = () => {
   // Persistence: Load from localStorage
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
+    let currentTables: Table[] = [];
     if (saved) {
       try {
-        setTables(JSON.parse(saved));
+        currentTables = JSON.parse(saved);
       } catch (e) {
         console.error("Error loading data", e);
       }
     }
+
+    // Asegurar que exista "Ventanilla"
+    const hasVentanilla = currentTables.some(t => t.name === 'Ventanilla');
+    if (!hasVentanilla) {
+      const ventanilla: Table = {
+        id: 'table-ventanilla',
+        number: 0,
+        name: 'Ventanilla',
+        products: [],
+        manualServiceFee: 0,
+        manualTotal: 0,
+        payments: { cash: 0, pix: 0, debit: 0, credit: 0 },
+        splitCount: 1,
+        paymentRecords: []
+      };
+      currentTables = [ventanilla, ...currentTables];
+    }
+    setTables(currentTables);
   }, []);
 
   // Persistence: Save to localStorage
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(tables));
+    if (tables.length > 0) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(tables));
+    }
   }, [tables]);
 
   const globalTotals = useMemo<GlobalTotals>(() => {
@@ -67,6 +88,11 @@ const App: React.FC = () => {
   };
 
   const deleteTable = (id: string) => {
+    const tableToDelete = tables.find(t => t.id === id);
+    if (tableToDelete?.name === 'Ventanilla') {
+      alert("No se puede eliminar la mesa Ventanilla.");
+      return;
+    }
     setTables(prev => prev.filter(t => t.id !== id));
     if (selectedTableId === id) setSelectedTableId(null);
   };
@@ -92,7 +118,7 @@ const App: React.FC = () => {
                 key={table.id} 
                 table={table} 
                 onClick={() => setSelectedTableId(table.id)} 
-                onNameChange={(name) => updateTable({ ...table, name })}
+                onNameChange={(name) => table.name !== 'Ventanilla' && updateTable({ ...table, name })}
               />
             ))}
             
@@ -103,7 +129,7 @@ const App: React.FC = () => {
               <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-gray-500 group-hover:text-blue-500 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
-              <span className="text-gray-400 font-semibold group-hover:text-blue-500 text-sm">Adicionar Mesa</span>
+              <span className="text-gray-400 font-semibold group-hover:text-blue-500 text-[19px]">Adicionar Mesa</span>
             </button>
           </div>
         </div>

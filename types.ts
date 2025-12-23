@@ -14,6 +14,12 @@ export interface TablePayments {
   credit: number;
 }
 
+export interface PaymentRecord {
+  id: string;
+  amount: number;
+  method: keyof TablePayments;
+}
+
 export interface Table {
   id: string;
   number: number;
@@ -23,6 +29,7 @@ export interface Table {
   manualTotal: number;
   payments: TablePayments;
   splitCount: number;
+  paymentRecords?: PaymentRecord[]; // Nuevo campo para Ventanilla
 }
 
 export interface GlobalTotals {
