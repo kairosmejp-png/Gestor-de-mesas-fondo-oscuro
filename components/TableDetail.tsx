@@ -1,29 +1,36 @@
 
-import React, { useState, useEffect } from 'react';
-import { Table, Product, TablePayments, PaymentRecord } from '../types';
+import React, { useState, useEffect, useRef } from 'react';
+import { Table, Product, TablePayments, PaymentRecord, MenuItem } from '../types';
 
 interface TableDetailProps {
   table: Table;
+  menu: MenuItem[];
   onBack: () => void;
   onUpdate: (table: Table) => void;
   onDelete: () => void;
 }
 
-const TableDetail: React.FC<TableDetailProps> = ({ table, onBack, onUpdate, onDelete }) => {
+const TableDetail: React.FC<TableDetailProps> = ({ table, menu, onBack, onUpdate, onDelete }) => {
   const [editingName, setEditingName] = useState(table.name);
   const [paymentAmount, setPaymentAmount] = useState<string>('');
+  const [activeSuggestionId, setActiveSuggestionId] = useState<string | null>(null);
+  const suggestionRef = useRef<HTMLDivElement>(null);
   
   const isVentanilla = table.name === 'Ventanilla';
 
-  // Lógica de redondeo automático
-  const formatCurrency = (val: number) => Math.round(val).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
+  // Mostrar siempre 2 decimales en el detalle de la mesa
+  const formatCurrency = (val: number) => val.toLocaleString('pt-BR', { 
+    style: 'currency', 
+    currency: 'BRL', 
+    minimumFractionDigits: 2, 
+    maximumFractionDigits: 2 
+  });
 
   // Cálculos automáticos
   const totalQty = table.products.reduce((acc, p) => acc + p.quantity, 0);
   const productSubtotal = table.products.reduce((acc, p) => acc + (p.quantity * p.unitPrice), 0);
   
   const currentServiceFee = isVentanilla ? (totalQty * 0.5) : table.manualServiceFee;
-  // IMPORTANTE: En Ventanilla el total NO incluye la taxa
   const currentTotal = isVentanilla ? productSubtotal : table.manualTotal;
 
   // Sincronizar cálculos si cambian los productos en Ventanilla
@@ -38,6 +45,17 @@ const TableDetail: React.FC<TableDetailProps> = ({ table, onBack, onUpdate, onDe
       }
     }
   }, [table.products, isVentanilla, currentServiceFee, currentTotal]);
+
+  // Click outside suggestions
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (suggestionRef.current && !suggestionRef.current.contains(event.target as Node)) {
+        setActiveSuggestionId(null);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleAddProduct = () => {
     const newProduct: Product = {
@@ -57,6 +75,11 @@ const TableDetail: React.FC<TableDetailProps> = ({ table, onBack, onUpdate, onDe
 
   const deleteProduct = (pid: string) => {
     onUpdate({ ...table, products: table.products.filter(p => p.id !== pid) });
+  };
+
+  const selectSuggestion = (pid: string, item: MenuItem) => {
+    updateProduct(pid, { description: item.name, unitPrice: item.price });
+    setActiveSuggestionId(null);
   };
 
   const addPayment = (method: keyof TablePayments) => {
@@ -119,12 +142,8 @@ const TableDetail: React.FC<TableDetailProps> = ({ table, onBack, onUpdate, onDe
             />
           </div>
         </div>
-        {!isVentanilla && (
-          <button onClick={() => confirm('¿Eliminar esta mesa?') && onDelete()} className="text-red-500 hover:text-red-400 flex items-center gap-1 text-[19px] font-semibold">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-            ELIMINAR MESA
-          </button>
-        )}
+        
+        {/* Los botones de BORRAR y ELIMINAR MESA han sido eliminados por petición del usuario */}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
@@ -136,6 +155,7 @@ const TableDetail: React.FC<TableDetailProps> = ({ table, onBack, onUpdate, onDe
               <div className="flex items-center gap-4">
                 <input 
                   type="number"
+                  step="0.01"
                   placeholder="Monto pago..."
                   className="bg-gray-800 border-2 border-gray-700 rounded-lg p-3 w-48 text-[24px] font-bold text-white focus:border-blue-500 focus:outline-none"
                   value={paymentAmount}
@@ -193,13 +213,41 @@ const TableDetail: React.FC<TableDetailProps> = ({ table, onBack, onUpdate, onDe
                       </button>
                     </td>
                     <td className="p-4">
-                      <input type="number" value={prod.quantity} onChange={(e) => updateProduct(prod.id, { quantity: Number(e.target.value) })} className="bg-gray-800 border-none rounded p-2 w-32 text-center focus:ring-1 focus:ring-blue-500 font-bold" style={{ fontSize: '40px' }} />
+                      <input type="number" step="1" value={prod.quantity} onChange={(e) => updateProduct(prod.id, { quantity: Number(e.target.value) })} className="bg-gray-800 border-none rounded p-2 w-32 text-center focus:ring-1 focus:ring-blue-500 font-bold" style={{ fontSize: '40px' }} />
                     </td>
-                    <td className="p-4">
-                      <input type="text" placeholder="Escriba aquí..." value={prod.description} onChange={(e) => updateProduct(prod.id, { description: e.target.value })} className="bg-transparent border-none rounded p-2 w-full focus:ring-1 focus:ring-blue-500 font-bold placeholder:text-gray-700" style={{ fontSize: '40px' }} />
+                    <td className="p-4 relative">
+                      <input 
+                        type="text" 
+                        placeholder="Escriba aquí..." 
+                        value={prod.description} 
+                        onChange={(e) => {
+                          updateProduct(prod.id, { description: e.target.value });
+                          setActiveSuggestionId(prod.id);
+                        }} 
+                        onFocus={() => setActiveSuggestionId(prod.id)}
+                        className="bg-transparent border-none rounded p-2 w-full focus:ring-1 focus:ring-blue-500 font-bold placeholder:text-gray-700" 
+                        style={{ fontSize: '40px' }} 
+                      />
+                      {/* AUTOCOMPLETE SUGGESTIONS */}
+                      {activeSuggestionId === prod.id && prod.description.trim().length > 0 && (
+                        <div ref={suggestionRef} className="absolute left-0 right-0 top-full mt-1 bg-[#2d2d2d] border border-gray-700 rounded-lg shadow-2xl z-50 max-h-60 overflow-y-auto">
+                          {menu
+                            .filter(item => item.name.toLowerCase().includes(prod.description.toLowerCase()))
+                            .map(item => (
+                              <div 
+                                key={item.id}
+                                onClick={() => selectSuggestion(prod.id, item)}
+                                className="p-4 hover:bg-blue-600 cursor-pointer flex justify-between items-center border-b border-gray-800 last:border-none"
+                              >
+                                <span className="text-white font-bold text-[24px]">{item.name}</span>
+                                <span className="text-blue-300 font-mono text-[20px]">{formatCurrency(item.price)}</span>
+                              </div>
+                            ))}
+                        </div>
+                      )}
                     </td>
                     <td className="p-4 text-right">
-                      <input type="number" value={prod.unitPrice} onChange={(e) => updateProduct(prod.id, { unitPrice: Number(e.target.value) })} className="bg-gray-800 border-none rounded p-2 w-48 text-right focus:ring-1 focus:ring-blue-500 font-bold" style={{ fontSize: '40px' }} />
+                      <input type="number" step="0.01" value={prod.unitPrice} onChange={(e) => updateProduct(prod.id, { unitPrice: Number(e.target.value) })} className="bg-gray-800 border-none rounded p-2 w-48 text-right focus:ring-1 focus:ring-blue-500 font-bold" style={{ fontSize: '40px' }} />
                     </td>
                     <td className="p-4 text-right font-mono text-blue-400 font-black" style={{ fontSize: '40px' }}>
                       {formatCurrency(prod.quantity * prod.unitPrice)}
@@ -246,44 +294,81 @@ const TableDetail: React.FC<TableDetailProps> = ({ table, onBack, onUpdate, onDe
               <input 
                 disabled={isVentanilla}
                 type="number"
+                step="0.01"
                 className="bg-gray-800 border border-gray-700 rounded p-1 w-36 text-right text-blue-300 font-mono"
                 value={table.manualServiceFee}
                 onChange={(e) => !isVentanilla && onUpdate({ ...table, manualServiceFee: Number(e.target.value) })}
                 style={{ fontSize: '26px' }}
               />
             </div>
-            <div className="flex justify-between items-center gap-4">
-              <span className="text-white font-bold text-[23px]">TOTAL:</span>
-              <input 
-                disabled={isVentanilla}
-                type="number"
-                className="bg-gray-800 border border-blue-900 rounded p-2 w-44 text-right text-green-400 font-bold font-mono text-[29px]"
-                value={table.manualTotal}
-                onChange={(e) => !isVentanilla && onUpdate({ ...table, manualTotal: Number(e.target.value) })}
-                style={{ fontSize: '29px' }}
-              />
-            </div>
+
+            {/* Casilla de TOTAL solo para Ventanilla */}
+            {isVentanilla && (
+              <div className="flex justify-between items-center gap-4">
+                <span className="text-white font-bold text-[23px]">TOTAL:</span>
+                <input 
+                  disabled={true}
+                  type="number"
+                  step="0.01"
+                  className="bg-gray-800 border border-blue-900 rounded p-2 w-44 text-right text-green-400 font-bold font-mono text-[29px]"
+                  value={table.manualTotal}
+                  style={{ fontSize: '29px' }}
+                />
+              </div>
+            )}
           </div>
 
           {/* PAGOS */}
-          <div className="bg-[#242424] p-4 rounded-lg border border-gray-800 space-y-4">
+          <div className="bg-[#242424] p-4 rounded-lg border border-gray-800 space-y-4 overflow-hidden">
             <h3 className="text-[17px] uppercase font-bold text-gray-500 tracking-wider">Medios de Pago</h3>
-            <div className="grid grid-cols-1 gap-3">
-              <div className="flex items-center gap-3">
-                <div className="w-32 bg-green-600 text-white text-[15px] font-bold py-2 px-3 rounded text-center">EFECTIVO</div>
-                <input type="number" disabled={isVentanilla} className="bg-gray-800 border-none rounded p-2 flex-1 text-right font-mono" value={table.payments.cash} onChange={(e) => !isVentanilla && updatePaymentsDirectly({ cash: Number(e.target.value) })} style={{ fontSize: '21px' }} />
+            <div className="grid grid-cols-1 gap-4">
+              <div className="flex items-center gap-2">
+                <div className="w-28 bg-green-600 text-white text-[15px] font-bold py-2 px-1 rounded text-center shrink-0">EFECTIVO</div>
+                <input 
+                  type="number" 
+                  step="0.01"
+                  disabled={isVentanilla} 
+                  className="bg-gray-800 border-none rounded px-2 py-1 flex-1 text-right font-mono focus:ring-1 focus:ring-green-500 min-w-0" 
+                  value={table.payments.cash} 
+                  onChange={(e) => !isVentanilla && updatePaymentsDirectly({ cash: Number(e.target.value) })} 
+                  style={{ fontSize: isVentanilla ? '21px' : '31px' }} 
+                />
               </div>
-              <div className="flex items-center gap-3">
-                <div className="w-32 bg-yellow-500 text-black text-[15px] font-bold py-2 px-3 rounded text-center uppercase">Pix</div>
-                <input type="number" disabled={isVentanilla} className="bg-gray-800 border-none rounded p-2 flex-1 text-right font-mono" value={table.payments.pix} onChange={(e) => !isVentanilla && updatePaymentsDirectly({ pix: Number(e.target.value) })} style={{ fontSize: '21px' }} />
+              <div className="flex items-center gap-2">
+                <div className="w-28 bg-yellow-500 text-black text-[15px] font-bold py-2 px-1 rounded text-center uppercase shrink-0">Pix</div>
+                <input 
+                  type="number" 
+                  step="0.01"
+                  disabled={isVentanilla} 
+                  className="bg-gray-800 border-none rounded px-2 py-1 flex-1 text-right font-mono focus:ring-1 focus:ring-yellow-500 min-w-0" 
+                  value={table.payments.pix} 
+                  onChange={(e) => !isVentanilla && updatePaymentsDirectly({ pix: Number(e.target.value) })} 
+                  style={{ fontSize: isVentanilla ? '21px' : '31px' }} 
+                />
               </div>
-              <div className="flex items-center gap-3">
-                <div className="w-32 bg-sky-500 text-white text-[15px] font-bold py-2 px-3 rounded text-center">DÉBITO</div>
-                <input type="number" disabled={isVentanilla} className="bg-gray-800 border-none rounded p-2 flex-1 text-right font-mono" value={table.payments.debit} onChange={(e) => !isVentanilla && updatePaymentsDirectly({ debit: Number(e.target.value) })} style={{ fontSize: '21px' }} />
+              <div className="flex items-center gap-2">
+                <div className="w-28 bg-sky-500 text-white text-[15px] font-bold py-2 px-1 rounded text-center shrink-0">DÉBITO</div>
+                <input 
+                  type="number" 
+                  step="0.01"
+                  disabled={isVentanilla} 
+                  className="bg-gray-800 border-none rounded px-2 py-1 flex-1 text-right font-mono focus:ring-1 focus:ring-sky-500 min-w-0" 
+                  value={table.payments.debit} 
+                  onChange={(e) => !isVentanilla && updatePaymentsDirectly({ debit: Number(e.target.value) })} 
+                  style={{ fontSize: isVentanilla ? '21px' : '31px' }} 
+                />
               </div>
-              <div className="flex items-center gap-3">
-                <div className="w-32 bg-purple-500 text-white text-[15px] font-bold py-2 px-3 rounded text-center">CRÉDITO</div>
-                <input type="number" disabled={isVentanilla} className="bg-gray-800 border-none rounded p-2 flex-1 text-right font-mono" value={table.payments.credit} onChange={(e) => !isVentanilla && updatePaymentsDirectly({ credit: Number(e.target.value) })} style={{ fontSize: '21px' }} />
+              <div className="flex items-center gap-2">
+                <div className="w-28 bg-purple-500 text-white text-[15px] font-bold py-2 px-1 rounded text-center shrink-0">CRÉDITO</div>
+                <input 
+                  type="number" 
+                  step="0.01"
+                  disabled={isVentanilla} 
+                  className="bg-gray-800 border-none rounded px-2 py-1 flex-1 text-right font-mono focus:ring-1 focus:ring-purple-500 min-w-0" 
+                  value={table.payments.credit} 
+                  onChange={(e) => !isVentanilla && updatePaymentsDirectly({ credit: Number(e.target.value) })} 
+                  style={{ fontSize: isVentanilla ? '21px' : '31px' }} 
+                />
               </div>
             </div>
           </div>
@@ -297,7 +382,7 @@ const TableDetail: React.FC<TableDetailProps> = ({ table, onBack, onUpdate, onDe
               </div>
               <div className="flex justify-between items-center text-[19px]">
                 <span className="text-gray-400">Por persona:</span>
-                <span className="text-blue-300 font-bold font-mono text-[23px]">{formatCurrency(table.manualTotal / table.splitCount)}</span>
+                <span className="text-blue-300 font-bold font-mono text-[23px]">{formatCurrency(((Object.values(table.payments) as number[]).reduce((a,b)=>a+b, 0)) / table.splitCount)}</span>
               </div>
             </div>
           )}

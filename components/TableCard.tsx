@@ -14,9 +14,13 @@ const TableCard: React.FC<TableCardProps> = ({ table, onClick, onNameChange }) =
   const suggestedTotal = table.products.reduce((acc, p) => acc + (p.quantity * p.unitPrice), 0);
   const suggestedTotalWithFee = suggestedTotal * 1.1; // 10% fee
   
+  const totalPayments = (Object.values(table.payments) as number[]).reduce((a, b) => a + b, 0);
   const allDelivered = table.products.length > 0 && table.products.every(p => p.delivered);
-  // Fix: Explicitly cast Object.values to number[] to avoid 'unknown' type in reduce
-  const isPaid = table.manualTotal > 0 && ((Object.values(table.payments) as number[]).reduce((a, b) => a + b, 0) >= table.manualTotal);
+  
+  // Para mesas normales el criterio de pago es sobre la suma de pagos, para Ventanilla sobre manualTotal
+  const isPaid = isVentanilla 
+    ? (table.manualTotal > 0 && totalPayments >= table.manualTotal)
+    : (totalPayments > 0 && totalPayments >= suggestedTotalWithFee * 0.95); // Aproximación de pago
 
   let bgColor = 'bg-red-600';
   if (isVentanilla) {
@@ -71,7 +75,9 @@ const TableCard: React.FC<TableCardProps> = ({ table, onClick, onNameChange }) =
 
       <div className="mt-auto pt-1 border-t border-white/20 flex justify-between items-center text-[13px]">
         <span className="opacity-80 uppercase text-[10px] font-bold">{isVentanilla ? 'Total' : 'Facturado'}</span>
-        <span className="font-bold">{format(table.manualTotal)}</span>
+        <span className="font-bold">
+          {isVentanilla ? format(table.manualTotal) : format(totalPayments)}
+        </span>
       </div>
     </div>
   );

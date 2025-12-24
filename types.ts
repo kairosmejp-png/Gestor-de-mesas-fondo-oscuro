@@ -7,6 +7,12 @@ export interface Product {
   delivered: boolean;
 }
 
+export interface MenuItem {
+  id: string;
+  name: string;
+  price: number;
+}
+
 export interface TablePayments {
   cash: number;
   pix: number;
@@ -29,7 +35,7 @@ export interface Table {
   manualTotal: number;
   payments: TablePayments;
   splitCount: number;
-  paymentRecords?: PaymentRecord[]; // Nuevo campo para Ventanilla
+  paymentRecords?: PaymentRecord[];
 }
 
 export interface GlobalTotals {
