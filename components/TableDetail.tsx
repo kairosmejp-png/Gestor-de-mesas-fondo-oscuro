@@ -16,7 +16,7 @@ const TableDetail: React.FC<TableDetailProps> = ({ table, menu, onBack, onUpdate
   const [activeSuggestionId, setActiveSuggestionId] = useState<string | null>(null);
   const suggestionRef = useRef<HTMLDivElement>(null);
   
-  const isVentanilla = table.name === 'Ventanilla';
+  const isBalcao = table.name === 'BALCAO';
 
   // Mostrar siempre 2 decimales en el detalle de la mesa
   const formatCurrency = (val: number) => val.toLocaleString('pt-BR', { 
@@ -30,12 +30,13 @@ const TableDetail: React.FC<TableDetailProps> = ({ table, menu, onBack, onUpdate
   const totalQty = table.products.reduce((acc, p) => acc + p.quantity, 0);
   const productSubtotal = table.products.reduce((acc, p) => acc + (p.quantity * p.unitPrice), 0);
   
-  const currentServiceFee = isVentanilla ? (totalQty * 0.5) : table.manualServiceFee;
-  const currentTotal = isVentanilla ? productSubtotal : table.manualTotal;
+  // Taxa balcao ajustada a 0.25 por unidad
+  const currentServiceFee = isBalcao ? (totalQty * 0.25) : table.manualServiceFee;
+  const currentTotal = isBalcao ? productSubtotal : table.manualTotal;
 
-  // Sincronizar cálculos si cambian los productos en Ventanilla
+  // Sincronizar cálculos si cambian los productos en BALCAO
   useEffect(() => {
-    if (isVentanilla) {
+    if (isBalcao) {
       if (table.manualServiceFee !== currentServiceFee || table.manualTotal !== currentTotal) {
         onUpdate({ 
           ...table, 
@@ -44,7 +45,7 @@ const TableDetail: React.FC<TableDetailProps> = ({ table, menu, onBack, onUpdate
         });
       }
     }
-  }, [table.products, isVentanilla, currentServiceFee, currentTotal]);
+  }, [table.products, isBalcao, currentServiceFee, currentTotal]);
 
   // Click outside suggestions
   useEffect(() => {
@@ -63,7 +64,8 @@ const TableDetail: React.FC<TableDetailProps> = ({ table, menu, onBack, onUpdate
       quantity: 1,
       description: '', 
       unitPrice: 0,
-      delivered: false
+      delivered: false,
+      createdAt: Date.now() // Registro de tiempo de creación
     };
     onUpdate({ ...table, products: [...table.products, newProduct] });
   };
@@ -131,10 +133,10 @@ const TableDetail: React.FC<TableDetailProps> = ({ table, menu, onBack, onUpdate
             </svg>
           </button>
           <div className="flex items-center gap-2">
-            {!isVentanilla && <span className="text-gray-500 font-bold text-[25px]">Mesa #{table.number}</span>}
+            {!isBalcao && <span className="text-gray-500 font-bold text-[25px]">Mesa #{table.number}</span>}
             <input 
-              disabled={isVentanilla}
-              className={`bg-transparent border-b ${isVentanilla ? 'border-transparent' : 'border-transparent hover:border-gray-700 focus:border-blue-500'} focus:outline-none font-bold text-[29px] text-white px-1`}
+              disabled={isBalcao}
+              className={`bg-transparent border-b ${isBalcao ? 'border-transparent' : 'border-transparent hover:border-gray-700 focus:border-blue-500'} focus:outline-none font-bold text-[29px] text-white px-1 uppercase`}
               value={editingName}
               onChange={(e) => setEditingName(e.target.value)}
               onBlur={() => onUpdate({ ...table, name: editingName })}
@@ -142,15 +144,13 @@ const TableDetail: React.FC<TableDetailProps> = ({ table, menu, onBack, onUpdate
             />
           </div>
         </div>
-        
-        {/* Los botones de BORRAR y ELIMINAR MESA han sido eliminados por petición del usuario */}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         <div className="lg:col-span-3 space-y-4">
           
-          {/* SECCIÓN PAGOS VENTANILLA (Fila superior) */}
-          {isVentanilla && (
+          {/* SECCIÓN PAGOS BALCAO (Fila superior) */}
+          {isBalcao && (
             <div className="bg-[#242424] p-4 rounded-lg border border-gray-800 space-y-4">
               <div className="flex items-center gap-4">
                 <input 
@@ -188,8 +188,8 @@ const TableDetail: React.FC<TableDetailProps> = ({ table, menu, onBack, onUpdate
             </div>
           )}
 
-          {/* TABLA DE PRODUCTOS */}
-          <div className="bg-[#242424] rounded-lg border border-gray-800 overflow-hidden">
+          {/* TABLA DE PRODUCTOS - Nota: se cambió overflow-hidden por overflow-visible para permitir que el autocompletado flote */}
+          <div className="bg-[#242424] rounded-lg border border-gray-800 overflow-visible relative">
             <table className="w-full text-left border-collapse">
               <thead className="bg-[#2d2d2d] text-gray-400 text-[19px] uppercase">
                 <tr>
@@ -202,63 +202,70 @@ const TableDetail: React.FC<TableDetailProps> = ({ table, menu, onBack, onUpdate
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-800">
-                {table.products.map(prod => (
-                  <tr key={prod.id} className="hover:bg-white/5 transition-colors">
-                    <td className="p-4">
-                      <button 
-                        onClick={() => updateProduct(prod.id, { delivered: !prod.delivered })}
-                        className={`w-12 h-12 rounded flex items-center justify-center transition-colors ${prod.delivered ? 'bg-green-600' : 'bg-red-600'}`}
-                      >
-                        {prod.delivered && <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>}
-                      </button>
-                    </td>
-                    <td className="p-4">
-                      <input type="number" step="1" value={prod.quantity} onChange={(e) => updateProduct(prod.id, { quantity: Number(e.target.value) })} className="bg-gray-800 border-none rounded p-2 w-32 text-center focus:ring-1 focus:ring-blue-500 font-bold" style={{ fontSize: '40px' }} />
-                    </td>
-                    <td className="p-4 relative">
-                      <input 
-                        type="text" 
-                        placeholder="Escriba aquí..." 
-                        value={prod.description} 
-                        onChange={(e) => {
-                          updateProduct(prod.id, { description: e.target.value });
-                          setActiveSuggestionId(prod.id);
-                        }} 
-                        onFocus={() => setActiveSuggestionId(prod.id)}
-                        className="bg-transparent border-none rounded p-2 w-full focus:ring-1 focus:ring-blue-500 font-bold placeholder:text-gray-700" 
-                        style={{ fontSize: '40px' }} 
-                      />
-                      {/* AUTOCOMPLETE SUGGESTIONS */}
-                      {activeSuggestionId === prod.id && prod.description.trim().length > 0 && (
-                        <div ref={suggestionRef} className="absolute left-0 right-0 top-full mt-1 bg-[#2d2d2d] border border-gray-700 rounded-lg shadow-2xl z-50 max-h-60 overflow-y-auto">
-                          {menu
-                            .filter(item => item.name.toLowerCase().includes(prod.description.toLowerCase()))
-                            .map(item => (
+                {table.products.map(prod => {
+                  const filteredSuggestions = menu.filter(item => 
+                    item.name.toLowerCase().includes(prod.description.toLowerCase())
+                  );
+
+                  return (
+                    <tr key={prod.id} className="hover:bg-white/5 transition-colors">
+                      <td className="p-4">
+                        <button 
+                          onClick={() => updateProduct(prod.id, { delivered: !prod.delivered })}
+                          className={`w-12 h-12 rounded flex items-center justify-center transition-colors ${prod.delivered ? 'bg-green-600' : 'bg-red-600'}`}
+                        >
+                          {prod.delivered && <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>}
+                        </button>
+                      </td>
+                      <td className="p-4">
+                        <input type="number" step="1" value={prod.quantity} onChange={(e) => updateProduct(prod.id, { quantity: Number(e.target.value) })} className="bg-gray-800 border-none rounded p-2 w-32 text-center focus:ring-1 focus:ring-blue-500 font-bold" style={{ fontSize: '40px' }} />
+                      </td>
+                      <td className="p-4 relative">
+                        <input 
+                          type="text" 
+                          placeholder="Escriba aquí..." 
+                          value={prod.description} 
+                          onChange={(e) => {
+                            updateProduct(prod.id, { description: e.target.value });
+                            setActiveSuggestionId(prod.id);
+                          }} 
+                          onFocus={() => setActiveSuggestionId(prod.id)}
+                          className="bg-transparent border-none rounded p-2 w-full focus:ring-1 focus:ring-blue-500 font-bold placeholder:text-gray-700" 
+                          style={{ fontSize: '40px' }} 
+                        />
+                        {/* AUTOCOMPLETE SUGGESTIONS - Flota sobre el resto de la interfaz */}
+                        {activeSuggestionId === prod.id && prod.description.trim().length > 0 && filteredSuggestions.length > 0 && (
+                          <div 
+                            ref={suggestionRef} 
+                            className="absolute left-0 right-[-100px] top-full mt-1 bg-[#2d2d2d] border-2 border-blue-500 rounded-lg shadow-[0_20px_50px_rgba(0,0,0,0.8)] z-[9999] max-h-[400px] overflow-y-auto no-scrollbar animate-in fade-in slide-in-from-top-2 duration-150"
+                          >
+                            {filteredSuggestions.map(item => (
                               <div 
                                 key={item.id}
                                 onClick={() => selectSuggestion(prod.id, item)}
-                                className="p-4 hover:bg-blue-600 cursor-pointer flex justify-between items-center border-b border-gray-800 last:border-none"
+                                className="p-5 hover:bg-blue-600 cursor-pointer flex justify-between items-center border-b border-gray-800 last:border-none group transition-colors"
                               >
-                                <span className="text-white font-bold text-[24px]">{item.name}</span>
-                                <span className="text-blue-300 font-mono text-[20px]">{formatCurrency(item.price)}</span>
+                                <span className="text-white font-black text-[28px] group-hover:scale-105 transition-transform origin-left uppercase">{item.name}</span>
+                                <span className="text-blue-300 font-mono text-[24px] font-black group-hover:text-white">{formatCurrency(item.price)}</span>
                               </div>
                             ))}
-                        </div>
-                      )}
-                    </td>
-                    <td className="p-4 text-right">
-                      <input type="number" step="0.01" value={prod.unitPrice} onChange={(e) => updateProduct(prod.id, { unitPrice: Number(e.target.value) })} className="bg-gray-800 border-none rounded p-2 w-48 text-right focus:ring-1 focus:ring-blue-500 font-bold" style={{ fontSize: '40px' }} />
-                    </td>
-                    <td className="p-4 text-right font-mono text-blue-400 font-black" style={{ fontSize: '40px' }}>
-                      {formatCurrency(prod.quantity * prod.unitPrice)}
-                    </td>
-                    <td className="p-4 text-center">
-                      <button onClick={() => deleteProduct(prod.id)} className="text-gray-600 hover:text-red-500">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                          </div>
+                        )}
+                      </td>
+                      <td className="p-4 text-right">
+                        <input type="number" step="0.01" value={prod.unitPrice} onChange={(e) => updateProduct(prod.id, { unitPrice: Number(e.target.value) })} className="bg-gray-800 border-none rounded p-2 w-48 text-right focus:ring-1 focus:ring-blue-500 font-bold" style={{ fontSize: '40px' }} />
+                      </td>
+                      <td className="p-4 text-right font-mono text-blue-400 font-black" style={{ fontSize: '40px' }}>
+                        {formatCurrency(prod.quantity * prod.unitPrice)}
+                      </td>
+                      <td className="p-4 text-center">
+                        <button onClick={() => deleteProduct(prod.id)} className="text-gray-600 hover:text-red-500">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
             <button onClick={handleAddProduct} className="w-full p-8 bg-gray-800/30 hover:bg-gray-800 text-gray-400 flex items-center justify-center gap-3 transition-colors border-t border-gray-800 font-black text-[32px]">
@@ -272,7 +279,7 @@ const TableDetail: React.FC<TableDetailProps> = ({ table, menu, onBack, onUpdate
         <div className="flex flex-col gap-6 lg:col-span-1">
           <div className="bg-[#242424] p-4 rounded-lg border border-gray-800 flex flex-col gap-4">
             
-            {!isVentanilla && (
+            {!isBalcao && (
               <>
                 <div className="flex justify-between items-center text-[28px]">
                   <span className="text-gray-500">Subtotal:</span>
@@ -290,20 +297,20 @@ const TableDetail: React.FC<TableDetailProps> = ({ table, menu, onBack, onUpdate
             )}
 
             <div className="flex justify-between items-center gap-4 text-[21px]">
-              <span className="text-gray-300">{isVentanilla ? 'Taxa:' : 'Taxa manual:'}</span>
+              <span className="text-gray-300">{isBalcao ? 'Taxa:' : 'Taxa manual:'}</span>
               <input 
-                disabled={isVentanilla}
+                disabled={isBalcao}
                 type="number"
                 step="0.01"
                 className="bg-gray-800 border border-gray-700 rounded p-1 w-36 text-right text-blue-300 font-mono"
                 value={table.manualServiceFee}
-                onChange={(e) => !isVentanilla && onUpdate({ ...table, manualServiceFee: Number(e.target.value) })}
+                onChange={(e) => !isBalcao && onUpdate({ ...table, manualServiceFee: Number(e.target.value) })}
                 style={{ fontSize: '26px' }}
               />
             </div>
 
-            {/* Casilla de TOTAL solo para Ventanilla */}
-            {isVentanilla && (
+            {/* Casilla de TOTAL solo para BALCAO */}
+            {isBalcao && (
               <div className="flex justify-between items-center gap-4">
                 <span className="text-white font-bold text-[23px]">TOTAL:</span>
                 <input 
@@ -327,11 +334,11 @@ const TableDetail: React.FC<TableDetailProps> = ({ table, menu, onBack, onUpdate
                 <input 
                   type="number" 
                   step="0.01"
-                  disabled={isVentanilla} 
+                  disabled={isBalcao} 
                   className="bg-gray-800 border-none rounded px-2 py-1 flex-1 text-right font-mono focus:ring-1 focus:ring-green-500 min-w-0" 
                   value={table.payments.cash} 
-                  onChange={(e) => !isVentanilla && updatePaymentsDirectly({ cash: Number(e.target.value) })} 
-                  style={{ fontSize: isVentanilla ? '21px' : '31px' }} 
+                  onChange={(e) => !isBalcao && updatePaymentsDirectly({ cash: Number(e.target.value) })} 
+                  style={{ fontSize: isBalcao ? '21px' : '31px' }} 
                 />
               </div>
               <div className="flex items-center gap-2">
@@ -339,11 +346,11 @@ const TableDetail: React.FC<TableDetailProps> = ({ table, menu, onBack, onUpdate
                 <input 
                   type="number" 
                   step="0.01"
-                  disabled={isVentanilla} 
+                  disabled={isBalcao} 
                   className="bg-gray-800 border-none rounded px-2 py-1 flex-1 text-right font-mono focus:ring-1 focus:ring-yellow-500 min-w-0" 
                   value={table.payments.pix} 
-                  onChange={(e) => !isVentanilla && updatePaymentsDirectly({ pix: Number(e.target.value) })} 
-                  style={{ fontSize: isVentanilla ? '21px' : '31px' }} 
+                  onChange={(e) => !isBalcao && updatePaymentsDirectly({ pix: Number(e.target.value) })} 
+                  style={{ fontSize: isBalcao ? '21px' : '31px' }} 
                 />
               </div>
               <div className="flex items-center gap-2">
@@ -351,11 +358,11 @@ const TableDetail: React.FC<TableDetailProps> = ({ table, menu, onBack, onUpdate
                 <input 
                   type="number" 
                   step="0.01"
-                  disabled={isVentanilla} 
+                  disabled={isBalcao} 
                   className="bg-gray-800 border-none rounded px-2 py-1 flex-1 text-right font-mono focus:ring-1 focus:ring-sky-500 min-w-0" 
                   value={table.payments.debit} 
-                  onChange={(e) => !isVentanilla && updatePaymentsDirectly({ debit: Number(e.target.value) })} 
-                  style={{ fontSize: isVentanilla ? '21px' : '31px' }} 
+                  onChange={(e) => !isBalcao && updatePaymentsDirectly({ debit: Number(e.target.value) })} 
+                  style={{ fontSize: isBalcao ? '21px' : '31px' }} 
                 />
               </div>
               <div className="flex items-center gap-2">
@@ -363,18 +370,18 @@ const TableDetail: React.FC<TableDetailProps> = ({ table, menu, onBack, onUpdate
                 <input 
                   type="number" 
                   step="0.01"
-                  disabled={isVentanilla} 
+                  disabled={isBalcao} 
                   className="bg-gray-800 border-none rounded px-2 py-1 flex-1 text-right font-mono focus:ring-1 focus:ring-purple-500 min-w-0" 
                   value={table.payments.credit} 
-                  onChange={(e) => !isVentanilla && updatePaymentsDirectly({ credit: Number(e.target.value) })} 
-                  style={{ fontSize: isVentanilla ? '21px' : '31px' }} 
+                  onChange={(e) => !isBalcao && updatePaymentsDirectly({ credit: Number(e.target.value) })} 
+                  style={{ fontSize: isBalcao ? '21px' : '31px' }} 
                 />
               </div>
             </div>
           </div>
 
-          {/* DIVIDIR CUENTA (Solo si NO es ventanilla) */}
-          {!isVentanilla && (
+          {/* DIVIDIR CUENTA (Solo si NO es BALCAO) */}
+          {!isBalcao && (
             <div className="bg-[#1e293b] p-4 rounded-lg border border-blue-900/50 flex flex-col gap-3">
               <div className="flex items-center justify-between">
                 <span className="text-blue-200 font-semibold flex items-center gap-2 text-[21px]">Dividir</span>

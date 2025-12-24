@@ -1,13 +1,15 @@
 
 import React from 'react';
-import { Table } from '../types';
+import { Table, GlobalTotals } from '../types';
+import SummaryPanel from './SummaryPanel';
 
 interface SalesSummaryProps {
   tables: Table[];
+  totals: GlobalTotals;
   onBack: () => void;
 }
 
-const SalesSummary: React.FC<SalesSummaryProps> = ({ tables, onBack }) => {
+const SalesSummary: React.FC<SalesSummaryProps> = ({ tables, totals, onBack }) => {
   const salesMap = new Map<string, { name: string; quantity: number; totalRevenue: number }>();
 
   // Agrupar productos de todas las mesas
@@ -29,7 +31,6 @@ const SalesSummary: React.FC<SalesSummaryProps> = ({ tables, onBack }) => {
   });
 
   const salesList = Array.from(salesMap.values()).sort((a, b) => b.totalRevenue - a.totalRevenue);
-  const grandTotal = salesList.reduce((acc, curr) => acc + curr.totalRevenue, 0);
 
   const formatCurrency = (val: number) => val.toLocaleString('pt-BR', { 
     style: 'currency', 
@@ -48,10 +49,11 @@ const SalesSummary: React.FC<SalesSummaryProps> = ({ tables, onBack }) => {
           </button>
           <h1 className="text-[32px] font-bold text-white uppercase tracking-wider">Productos Vendidos</h1>
         </div>
-        <div className="bg-[#242424] px-6 py-3 rounded-lg border border-gray-700 flex flex-col items-end">
-            <span className="text-[12px] text-gray-500 uppercase font-black">Total Acumulado (Bruto)</span>
-            <span className="text-[28px] font-black text-green-500 font-mono">{formatCurrency(grandTotal)}</span>
-        </div>
+      </div>
+
+      {/* Panel de sumatorias ahora dentro de Ventas */}
+      <div className="mb-8">
+        <SummaryPanel totals={totals} />
       </div>
 
       <div className="bg-[#242424] rounded-lg border border-gray-800 overflow-hidden">

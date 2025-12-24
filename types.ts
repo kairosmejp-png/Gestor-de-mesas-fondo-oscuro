@@ -5,6 +5,7 @@ export interface Product {
   description: string;
   unitPrice: number;
   delivered: boolean;
+  createdAt?: number;
 }
 
 export interface MenuItem {

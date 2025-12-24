@@ -9,7 +9,7 @@ interface TableCardProps {
 }
 
 const TableCard: React.FC<TableCardProps> = ({ table, onClick, onNameChange }) => {
-  const isVentanilla = table.name === 'Ventanilla';
+  const isBalcao = table.name === 'BALCAO';
   
   const suggestedTotal = table.products.reduce((acc, p) => acc + (p.quantity * p.unitPrice), 0);
   const suggestedTotalWithFee = suggestedTotal * 1.1; // 10% fee
@@ -17,13 +17,13 @@ const TableCard: React.FC<TableCardProps> = ({ table, onClick, onNameChange }) =
   const totalPayments = (Object.values(table.payments) as number[]).reduce((a, b) => a + b, 0);
   const allDelivered = table.products.length > 0 && table.products.every(p => p.delivered);
   
-  // Para mesas normales el criterio de pago es sobre la suma de pagos, para Ventanilla sobre manualTotal
-  const isPaid = isVentanilla 
+  // Se considera pagada si los cobros cubren el subtotal de productos
+  const isPaid = isBalcao 
     ? (table.manualTotal > 0 && totalPayments >= table.manualTotal)
-    : (totalPayments > 0 && totalPayments >= suggestedTotalWithFee * 0.95); // Aproximación de pago
+    : (suggestedTotal > 0 && totalPayments >= suggestedTotal);
 
   let bgColor = 'bg-red-600';
-  if (isVentanilla) {
+  if (isBalcao) {
     bgColor = 'bg-purple-700';
   } else if (isPaid && allDelivered) {
     bgColor = 'bg-blue-600';
@@ -40,16 +40,16 @@ const TableCard: React.FC<TableCardProps> = ({ table, onClick, onNameChange }) =
 
   return (
     <div 
-      className={`relative rounded-lg shadow-lg overflow-hidden cursor-pointer transition-transform hover:scale-105 ${bgColor} border border-white/10 h-32 flex flex-col p-2 text-white`}
+      className={`relative rounded-lg shadow-lg overflow-hidden cursor-pointer transition-transform hover:scale-105 ${bgColor} border border-white/10 h-44 flex flex-col p-3 text-white`}
       onClick={onClick}
     >
-      <div className="flex justify-between items-start">
-        <span className="text-[12px] font-bold opacity-60">{isVentanilla ? 'BOX' : `#${table.number}`}</span>
+      <div className="flex justify-between items-start gap-1">
+        <span className="text-[14px] font-bold opacity-70 shrink-0">{isBalcao ? 'BOX' : `#${table.number}`}</span>
         <input
-          disabled={isVentanilla}
+          disabled={isBalcao}
           type="text"
           value={table.name}
-          className={`bg-transparent border-none focus:outline-none ${!isVentanilla && 'focus:ring-1 focus:ring-white/50'} rounded px-1 font-bold text-[18px] w-full text-right`}
+          className={`bg-transparent border-none focus:outline-none ${!isBalcao && 'focus:ring-1 focus:ring-white/50'} rounded px-1 font-black text-[24px] w-full text-right uppercase tracking-tighter`}
           onChange={(e) => {
             e.stopPropagation();
             onNameChange(e.target.value);
@@ -58,10 +58,10 @@ const TableCard: React.FC<TableCardProps> = ({ table, onClick, onNameChange }) =
         />
       </div>
       
-      <div className="flex-1 flex flex-col items-center justify-center -mt-1">
-        {!isVentanilla ? (
+      <div className="flex-1 flex flex-col items-center justify-center -mt-2">
+        {!isBalcao ? (
           <>
-            <span className="text-[11px] opacity-80 uppercase font-black tracking-tighter">Sugerido</span>
+            <span className="text-[12px] opacity-80 uppercase font-black tracking-tighter">Sugerido</span>
             <span className="text-[38px] font-black leading-none tracking-tighter">
               {format(suggestedTotalWithFee)}
             </span>
@@ -73,11 +73,16 @@ const TableCard: React.FC<TableCardProps> = ({ table, onClick, onNameChange }) =
         )}
       </div>
 
-      <div className="mt-auto pt-1 border-t border-white/20 flex justify-between items-center text-[13px]">
-        <span className="opacity-80 uppercase text-[10px] font-bold">{isVentanilla ? 'Total' : 'Facturado'}</span>
-        <span className="font-bold">
-          {isVentanilla ? format(table.manualTotal) : format(totalPayments)}
-        </span>
+      <div className="mt-auto pt-2 border-t border-white/20 flex justify-between items-center">
+        <div className="flex flex-col">
+          <span className="opacity-80 uppercase text-[10px] font-bold leading-none">{isBalcao ? 'Total' : 'Facturado'}</span>
+          <span className="font-black text-[20px] leading-tight">
+            {isBalcao ? format(table.manualTotal) : format(totalPayments)}
+          </span>
+        </div>
+        {allDelivered && !isPaid && (
+          <span className="bg-white/20 px-1 py-1 rounded text-[9px] font-black uppercase">Pendiente Pago</span>
+        )}
       </div>
     </div>
   );
