@@ -39,44 +39,43 @@ const SalesSummary: React.FC<SalesSummaryProps> = ({ tables, totals, onBack }) =
   });
 
   return (
-    <div className="w-full bg-[#1a1a1a] rounded-xl shadow-2xl p-6 border border-gray-800 animate-in fade-in duration-300">
-      <div className="flex items-center justify-between mb-8">
+    <div className="w-full bg-[#1a1a1a] rounded-xl shadow-2xl p-4 md:p-6 border border-gray-800 animate-in fade-in duration-300">
+      <div className="flex items-center justify-between mb-6 md:mb-8">
         <div className="flex items-center gap-4">
           <button onClick={onBack} className="p-2 hover:bg-gray-800 rounded-full transition-colors text-gray-400 hover:text-white">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
           </button>
-          <h1 className="text-[32px] font-bold text-white uppercase tracking-wider">Productos Vendidos</h1>
+          <h1 className="text-[24px] md:text-[32px] font-bold text-white uppercase tracking-wider">Ventas</h1>
         </div>
       </div>
 
-      {/* Panel de sumatorias ahora dentro de Ventas */}
-      <div className="mb-8">
+      <div className="mb-6 md:mb-8">
         <SummaryPanel totals={totals} />
       </div>
 
       <div className="bg-[#242424] rounded-lg border border-gray-800 overflow-hidden">
         <table className="w-full text-left border-collapse">
-          <thead className="bg-[#2d2d2d] text-gray-400 text-[19px] uppercase">
+          <thead className="bg-[#2d2d2d] text-gray-400 text-[14px] md:text-[19px] uppercase">
             <tr>
-              <th className="p-4">Producto</th>
-              <th className="p-4 text-center">Unidades</th>
-              <th className="p-4 text-right">Total Dinero</th>
+              <th className="p-3 md:p-4">Producto</th>
+              <th className="p-3 md:p-4 text-center">Unid.</th>
+              <th className="p-3 md:p-4 text-right">Total</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-800">
             {salesList.map((item, idx) => (
               <tr key={idx} className="hover:bg-white/5 transition-colors">
-                <td className="p-4 text-white font-bold text-[26px]">{item.name}</td>
-                <td className="p-4 text-center text-gray-300 font-black text-[26px]">{item.quantity}</td>
-                <td className="p-4 text-right text-blue-400 font-black font-mono text-[26px]">{formatCurrency(item.totalRevenue)}</td>
+                <td className="p-3 md:p-4 text-white font-bold text-[16px] md:text-[26px] uppercase">{item.name}</td>
+                <td className="p-3 md:p-4 text-center text-gray-300 font-black text-[16px] md:text-[26px]">{item.quantity}</td>
+                <td className="p-3 md:p-4 text-right text-blue-400 font-black font-mono text-[16px] md:text-[26px]">{formatCurrency(item.totalRevenue)}</td>
               </tr>
             ))}
             {salesList.length === 0 && (
               <tr>
-                <td colSpan={3} className="p-12 text-center text-gray-600 text-[24px] font-bold">
-                  No se han registrado productos vendidos aún.
+                <td colSpan={3} className="p-8 md:p-12 text-center text-gray-600 text-[18px] md:text-[24px] font-bold">
+                  Sin ventas registradas.
                 </td>
               </tr>
             )}

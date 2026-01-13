@@ -9,7 +9,6 @@ interface SummaryPanelProps {
 const SummaryPanel: React.FC<SummaryPanelProps> = ({ totals }) => {
   const [visibleItems, setVisibleItems] = useState<{ [key: string]: boolean }>({});
 
-  // Redondeo automático a entero y formateo
   const format = (val: number) => Math.round(val).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
 
   const toggleVisibility = (key: string) => {
@@ -35,17 +34,16 @@ const SummaryPanel: React.FC<SummaryPanelProps> = ({ totals }) => {
     return (
       <div 
         onClick={() => toggleVisibility(id)}
-        className={`${bgColor} p-4 rounded-lg shadow-lg border ${borderColor} cursor-pointer transition-all hover:brightness-110 active:scale-95 select-none h-28 flex flex-col justify-center`}
+        className={`${bgColor} p-3 md:p-4 rounded-lg shadow-lg border ${borderColor} cursor-pointer transition-all hover:brightness-110 active:scale-95 select-none h-28 md:h-28 flex flex-col justify-center`}
       >
-        <p className={`${textColor} opacity-80 text-[17px] uppercase font-bold mb-1`}>{label}</p>
+        <p className={`${textColor} opacity-80 text-[14px] md:text-[17px] uppercase font-black mb-1`}>{label}</p>
         <div className="relative">
-          {/* Tamaño de letra aumentado a 37px cuando es visible (+8 puntos sobre los 29px anteriores) */}
-          <p className={`${textColor} font-bold font-mono truncate transition-all duration-300 ${!isVisible ? 'text-[29px] blur-sm grayscale opacity-40' : 'text-[37px]'}`}>
-            {isVisible ? format(value) : 'R$ ********'}
+          <p className={`${textColor} font-black font-mono truncate transition-all duration-300 ${!isVisible ? 'text-[20px] md:text-[29px] blur-sm grayscale opacity-40' : 'text-[28px] md:text-[37px]'}`}>
+            {isVisible ? format(value) : 'R$ *****'}
           </p>
           {!isVisible && (
             <div className="absolute inset-0 flex items-center justify-center">
-              <span className={`${textColor} text-[15px] font-bold opacity-80 uppercase tracking-widest`}>Ver valor</span>
+              <span className={`${textColor} text-[10px] md:text-[15px] font-black opacity-80 uppercase tracking-widest`}>Ver Monto</span>
             </div>
           )}
         </div>
@@ -54,7 +52,7 @@ const SummaryPanel: React.FC<SummaryPanelProps> = ({ totals }) => {
   };
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3 md:gap-4">
       <SummaryCard 
         id="billed"
         label="Total Facturado" 

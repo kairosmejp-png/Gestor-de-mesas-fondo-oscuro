@@ -1,28 +1,33 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Table, Product, GlobalTotals, MenuItem } from './types';
+import { Table, Product, GlobalTotals, MenuItem, InventoryItem } from './types';
 import TableCard from './components/TableCard';
 import TableDetail from './components/TableDetail';
 import MenuManager from './components/MenuManager';
 import SalesSummary from './components/SalesSummary';
 import WaitingList from './components/WaitingList';
 import InvoicedTables from './components/InvoicedTables';
+import InventoryManager from './components/InventoryManager';
 
 const STORAGE_KEY = 'gestor_mesas_pro_data';
 const MENU_STORAGE_KEY = 'gestor_mesas_pro_menu';
+const INVENTORY_STORAGE_KEY = 'gestor_mesas_pro_inventory';
 
 const App: React.FC = () => {
   const [tables, setTables] = useState<Table[]>([]);
   const [menu, setMenu] = useState<MenuItem[]>([]);
+  const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [selectedTableId, setSelectedTableId] = useState<string | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSalesOpen, setIsSalesOpen] = useState(false);
   const [isWaitingOpen, setIsWaitingOpen] = useState(false);
   const [isInvoicedTablesOpen, setIsInvoicedTablesOpen] = useState(false);
+  const [isInventoryOpen, setIsInventoryOpen] = useState(false);
 
   useEffect(() => {
     const savedTables = localStorage.getItem(STORAGE_KEY);
     const savedMenu = localStorage.getItem(MENU_STORAGE_KEY);
+    const savedInventory = localStorage.getItem(INVENTORY_STORAGE_KEY);
     
     let currentTables: Table[] = [];
     if (savedTables) {
@@ -33,6 +38,14 @@ const App: React.FC = () => {
       }
     }
 
+    if (savedInventory) {
+      try {
+        setInventory(JSON.parse(savedInventory));
+      } catch (e) {
+        console.error("Error loading inventory", e);
+      }
+    }
+
     if (savedMenu) {
       try {
         setMenu(JSON.parse(savedMenu));
@@ -40,24 +53,19 @@ const App: React.FC = () => {
         console.error("Error loading menu", e);
       }
     } else {
-      // Si no hay menú, sembramos los productos iniciales solicitados (Lista Completa)
       const initialMenu: MenuItem[] = [
-        // Bebidas Básicas
         { id: crypto.randomUUID(), name: 'REFRIGERANTE', price: 8 },
         { id: crypto.randomUUID(), name: 'AGUA', price: 5 },
         { id: crypto.randomUUID(), name: 'LATA SUCO', price: 10 },
         { id: crypto.randomUUID(), name: 'LATAO CERVEJA', price: 13 },
         { id: crypto.randomUUID(), name: 'LONGNECK CERVEJA', price: 15 },
-        // Cervezas 600ml
         { id: crypto.randomUUID(), name: 'HEINEKEN 600ML', price: 22 },
         { id: crypto.randomUUID(), name: 'ORIGINAL ANTARTICA 600ML', price: 22 },
         { id: crypto.randomUUID(), name: 'ANTARTICA REGULAR 600ML', price: 18 },
         { id: crypto.randomUUID(), name: 'BRAHMA 600ML', price: 18 },
         { id: crypto.randomUUID(), name: 'AMSTEL 600ML', price: 18 },
-        // Otros Bebidas
         { id: crypto.randomUUID(), name: 'LATA MIX ALCOOL', price: 10 },
         { id: crypto.randomUUID(), name: 'ENERGETICO/ENERGIZANTE', price: 20 },
-        // Tragos y Cócteles
         { id: crypto.randomUUID(), name: 'CAIPIRINHA', price: 15 },
         { id: crypto.randomUUID(), name: 'CAIPIFRUTA', price: 20 },
         { id: crypto.randomUUID(), name: 'CAIPIVODKA', price: 20 },
@@ -70,7 +78,6 @@ const App: React.FC = () => {
         { id: crypto.randomUUID(), name: 'DAIKIRI', price: 40 },
         { id: crypto.randomUUID(), name: 'TEQUILA', price: 35 },
         { id: crypto.randomUUID(), name: 'WISHKEY', price: 35 },
-        // Raciones
         { id: crypto.randomUUID(), name: 'BATATA FRITA', price: 25 },
         { id: crypto.randomUUID(), name: 'FRANGO A PASSARINHO', price: 60 },
         { id: crypto.randomUUID(), name: 'LULA AO DORE', price: 60 },
@@ -81,7 +88,6 @@ const App: React.FC = () => {
         { id: crypto.randomUUID(), name: 'ISCA DE PEIXE', price: 60 },
         { id: crypto.randomUUID(), name: 'ISCA DE FRANGO', price: 60 },
         { id: crypto.randomUUID(), name: 'ESPETINHO', price: 15 },
-        // Pizzas
         { id: crypto.randomUUID(), name: 'PIZZA MUSSARELA', price: 65 },
         { id: crypto.randomUUID(), name: 'PIZZA PRESUNTO', price: 70 },
         { id: crypto.randomUUID(), name: 'PIZZA MARGHERITA', price: 70 },
@@ -89,7 +95,6 @@ const App: React.FC = () => {
         { id: crypto.randomUUID(), name: 'PIZZA FRANGO E CATUPIRY', price: 80 },
         { id: crypto.randomUUID(), name: 'PIZZA PORTUGUESA', price: 90 },
         { id: crypto.randomUUID(), name: 'PIZZA PEITO DE PERU', price: 120 },
-        // Platos Principales
         { id: crypto.randomUUID(), name: 'FILE MIGNON', price: 70 },
         { id: crypto.randomUUID(), name: 'COXA E SOBRE COXA', price: 40 },
         { id: crypto.randomUUID(), name: 'CONTRA FILE', price: 50 },
@@ -102,13 +107,18 @@ const App: React.FC = () => {
         { id: crypto.randomUUID(), name: 'STROGONOFF', price: 35 },
         { id: crypto.randomUUID(), name: 'MACARRAO AO MOLHO CAMARAO', price: 60 },
         { id: crypto.randomUUID(), name: 'PIRAO DE PANKA', price: 60 },
-        { id: crypto.randomUUID(), name: 'DOMINGOS AO ESPIEDO', price: 45 }
+        { id: crypto.randomUUID(), name: 'DOMINGOS AO ESPIEDO', price: 45 },
+        { id: crypto.randomUUID(), name: 'REFRIGERANTE 1,5L', price: 20 },
+        { id: crypto.randomUUID(), name: 'FRANGO GRELHADO', price: 50 },
+        { id: crypto.randomUUID(), name: 'ARROZ', price: 10 },
+        { id: crypto.randomUUID(), name: 'FEIJAO', price: 10 },
+        { id: crypto.randomUUID(), name: 'SALADA', price: 10 }
       ];
       setMenu(initialMenu);
       localStorage.setItem(MENU_STORAGE_KEY, JSON.stringify(initialMenu));
     }
 
-    const hasBalcao = currentTables.some(t => t.name === 'BALCAO');
+    const hasBalcao = currentTables.some(t => t.id === 'table-ventanilla');
     if (!hasBalcao) {
       const balcao: Table = {
         id: 'table-ventanilla',
@@ -119,7 +129,8 @@ const App: React.FC = () => {
         manualTotal: 0,
         payments: { cash: 0, pix: 0, debit: 0, credit: 0 },
         splitCount: 1,
-        paymentRecords: []
+        paymentRecords: [],
+        isInvoiced: false
       };
       currentTables = [balcao, ...currentTables];
     }
@@ -133,10 +144,8 @@ const App: React.FC = () => {
   }, [tables]);
 
   useEffect(() => {
-    if (menu.length > 0) {
-      localStorage.setItem(MENU_STORAGE_KEY, JSON.stringify(menu));
-    }
-  }, [menu]);
+    localStorage.setItem(INVENTORY_STORAGE_KEY, JSON.stringify(inventory));
+  }, [inventory]);
 
   const globalTotals = useMemo<GlobalTotals>(() => {
     return tables.reduce((acc, t) => {
@@ -158,18 +167,8 @@ const App: React.FC = () => {
     });
   }, [tables]);
 
-  const isTableInvoiced = (table: Table) => {
-    const totalPayments = table.payments.cash + table.payments.pix + table.payments.debit + table.payments.credit;
-    if (table.name === 'BALCAO') {
-      return table.manualTotal > 0 && totalPayments >= table.manualTotal;
-    }
-    
-    const subtotal = table.products.reduce((acc, p) => acc + (p.quantity * p.unitPrice), 0);
-    return subtotal > 0 && totalPayments >= subtotal;
-  };
-
   const addTable = () => {
-    const nextNumber = tables.length > 0 ? Math.max(...tables.filter(t => t.name !== 'BALCAO').map(t => t.number), 0) + 1 : 1;
+    const nextNumber = tables.length > 0 ? Math.max(...tables.filter(t => t.id !== 'table-ventanilla' && !t.isInvoiced).map(t => t.number), 0) + 1 : 1;
     const newTable: Table = {
       id: crypto.randomUUID(),
       number: nextNumber,
@@ -178,18 +177,46 @@ const App: React.FC = () => {
       manualServiceFee: 0,
       manualTotal: 0,
       payments: { cash: 0, pix: 0, debit: 0, credit: 0 },
-      splitCount: 1
+      splitCount: 1,
+      isInvoiced: false
     };
     setTables(prev => [...prev, newTable]);
   };
 
   const updateTable = (updatedTable: Table) => {
-    setTables(prev => prev.map(t => t.id === updatedTable.id ? updatedTable : t));
+    const subtotal = updatedTable.products.reduce((acc, p) => acc + (p.quantity * p.unitPrice), 0);
+    const totalPayments = (Object.values(updatedTable.payments) as number[]).reduce((a, b) => a + b, 0);
+    const allDelivered = updatedTable.products.length > 0 && updatedTable.products.every(p => p.delivered);
+    
+    const isPaid = updatedTable.id === 'table-ventanilla'
+      ? (updatedTable.manualTotal > 0 && totalPayments >= updatedTable.manualTotal)
+      : (subtotal > 0 && totalPayments >= subtotal);
+
+    const isBlue = allDelivered && isPaid;
+
+    let shouldReturnToDashboard = false;
+    let finalTable = { ...updatedTable };
+
+    if (updatedTable.id !== 'table-ventanilla') {
+      if (!updatedTable.isInvoiced && isBlue) {
+        finalTable.isInvoiced = true;
+        shouldReturnToDashboard = true;
+      } 
+      else if (updatedTable.isInvoiced && !isPaid) {
+        finalTable.isInvoiced = false;
+        shouldReturnToDashboard = true;
+      }
+    }
+
+    setTables(prev => prev.map(t => t.id === finalTable.id ? finalTable : t));
+
+    if (shouldReturnToDashboard && selectedTableId === finalTable.id) {
+      setSelectedTableId(null);
+    }
   };
 
   const deleteTable = (id: string) => {
-    const tableToDelete = tables.find(t => t.id === id);
-    if (tableToDelete?.name === 'BALCAO') {
+    if (id === 'table-ventanilla') {
       alert("No se puede eliminar la mesa BALCAO.");
       return;
     }
@@ -202,13 +229,14 @@ const App: React.FC = () => {
     setIsSalesOpen(false);
     setIsWaitingOpen(false);
     setIsInvoicedTablesOpen(false);
+    setIsInventoryOpen(false);
   };
 
   const selectedTable = tables.find(t => t.id === selectedTableId);
-  const balcaoTable = tables.find(t => t.name === 'BALCAO');
+  const balcaoTable = tables.find(t => t.id === 'table-ventanilla');
   
-  const openTables = tables.filter(t => t.name !== 'BALCAO' && !isTableInvoiced(t));
-  const invoicedTables = tables.filter(t => isTableInvoiced(t));
+  const openTables = tables.filter(t => t.id !== 'table-ventanilla' && !t.isInvoiced);
+  const invoicedTables = tables.filter(t => t.isInvoiced);
 
   const formatCurrency = (val: number) => Math.round(val).toLocaleString('pt-BR', { 
     style: 'currency', 
@@ -216,10 +244,63 @@ const App: React.FC = () => {
     maximumFractionDigits: 0 
   });
 
+  const balcaoPaymentsTotal = balcaoTable 
+    ? (balcaoTable.payments.cash + balcaoTable.payments.pix + balcaoTable.payments.debit + balcaoTable.payments.credit)
+    : 0;
+
+  const ReporBtn = () => (
+    <button onClick={() => { closeAllViews(); setIsInventoryOpen(true); }} className="w-full bg-amber-600 hover:bg-amber-700 text-white font-black rounded-lg shadow-lg flex items-center justify-center transition-all transform active:scale-95 text-[18px] md:text-[22px] uppercase h-14 md:h-20">
+      <span>Repor</span>
+    </button>
+  );
+
+  const VentasBtn = () => (
+    <button onClick={() => { closeAllViews(); setIsSalesOpen(true); }} className="w-full bg-green-600 hover:bg-green-700 text-white font-black rounded-lg shadow-lg flex items-center justify-center transition-all transform active:scale-95 text-[18px] md:text-[22px] uppercase h-14 md:h-20">
+      <span>Ventas</span>
+    </button>
+  );
+
+  const MenuBtn = () => (
+    <button onClick={() => { closeAllViews(); setIsMenuOpen(true); }} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-black rounded-lg shadow-lg flex items-center justify-center transition-all transform active:scale-95 text-[18px] md:text-[22px] uppercase h-14 md:h-20">
+      <span>Menú</span>
+    </button>
+  );
+
+  const EsperandoBtn = () => (
+    <button onClick={() => { closeAllViews(); setIsWaitingOpen(true); }} className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-lg shadow-lg flex items-center justify-center gap-2 transition-all transform active:scale-95 text-[18px] md:text-[22px] uppercase px-4 h-14 md:h-20">
+      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 md:h-7 md:w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      <span>Esperando</span>
+    </button>
+  );
+
+  const FacturadasBtn = () => (
+    <button onClick={() => { closeAllViews(); setIsInvoicedTablesOpen(true); }} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-lg shadow-lg flex items-center justify-center transition-all transform active:scale-95 text-[18px] md:text-[24px] uppercase px-4 h-14 md:h-20">
+      <span>Facturadas</span>
+    </button>
+  );
+
+  const BalcaoBtn = () => (
+    balcaoTable ? (
+      <button onClick={() => setSelectedTableId(balcaoTable.id)} className="w-full bg-purple-700 hover:bg-purple-600 rounded-lg shadow-lg border border-white/10 px-4 md:px-6 flex items-center justify-between transition-all transform active:scale-95 h-14 md:h-20">
+        <span className="text-[20px] md:text-[32px] font-black uppercase tracking-tighter leading-none">BALCAO</span>
+        <div className="flex flex-col items-end">
+          <span className="text-[8px] md:text-[10px] font-bold opacity-70 leading-none mb-1 uppercase">PAGOS</span>
+          <span className="text-[20px] md:text-[34px] font-black leading-none tracking-tighter">
+            {formatCurrency(balcaoPaymentsTotal)}
+          </span>
+        </div>
+      </button>
+    ) : null
+  );
+
   return (
     <div className="min-h-screen p-4 md:p-6 bg-[#121212] text-gray-200">
       {isMenuOpen ? (
         <MenuManager menu={menu} onUpdate={setMenu} onBack={closeAllViews} />
+      ) : isInventoryOpen ? (
+        <InventoryManager inventory={inventory} onUpdate={setInventory} onBack={closeAllViews} />
       ) : isSalesOpen ? (
         <SalesSummary tables={tables} totals={globalTotals} onBack={closeAllViews} />
       ) : isWaitingOpen ? (
@@ -236,55 +317,35 @@ const App: React.FC = () => {
         />
       ) : (
         <div className="flex flex-col gap-6">
-          <div className="sticky top-0 z-50 bg-[#121212] pt-2 border-b border-gray-800 -mx-4 px-4 md:-mx-6 md:px-6 mb-2 h-28 flex items-center">
-            <div className="flex flex-row items-center gap-3 h-24 overflow-x-auto overflow-y-hidden no-scrollbar w-full">
-               
-               {balcaoTable && (
-                 <button 
-                   onClick={() => setSelectedTableId(balcaoTable.id)}
-                   className="min-w-[200px] flex-1 bg-purple-700 hover:bg-purple-600 rounded-lg shadow-lg border border-white/10 px-6 flex items-center justify-between transition-all transform hover:scale-[1.02] active:scale-95 group h-20"
-                 >
-                    <span className="text-[32px] font-black uppercase tracking-tighter leading-none">BALCAO</span>
-                    <span className="text-[34px] font-black leading-none tracking-tighter">
-                      {formatCurrency(balcaoTable.manualTotal)}
-                    </span>
-                 </button>
-               )}
+          <div className="md:sticky md:top-0 z-50 bg-[#121212] pt-2 border-b border-gray-800 -mx-4 px-4 md:-mx-6 md:px-6 mb-2 flex flex-col gap-2">
+            <div className="flex flex-col gap-2 md:hidden mb-4">
+              <div className="grid grid-cols-3 gap-2">
+                <ReporBtn />
+                <VentasBtn />
+                <MenuBtn />
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <EsperandoBtn />
+                <FacturadasBtn />
+              </div>
+              <div className="w-full">
+                <BalcaoBtn />
+              </div>
+            </div>
 
-               <button 
-                  onClick={() => { closeAllViews(); setIsWaitingOpen(true); }}
-                  className="w-64 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-lg shadow-lg flex items-center justify-center gap-3 transition-all transform hover:scale-[1.02] active:scale-95 text-[22px] uppercase px-4 h-20 shrink-0"
-               >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  <span>Esperando</span>
-               </button>
-
-               <button 
-                  onClick={() => { closeAllViews(); setIsInvoicedTablesOpen(true); }}
-                  className="w-64 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-lg shadow-lg flex items-center justify-center transition-all transform hover:scale-[1.02] active:scale-95 text-[24px] uppercase px-4 h-20 shrink-0"
-               >
-                  <span>Facturadas</span>
-               </button>
-
-               <button 
-                  onClick={() => { closeAllViews(); setIsSalesOpen(true); }}
-                  className="w-52 bg-green-600 hover:bg-green-700 text-white font-black rounded-lg shadow-lg flex items-center justify-center transition-all transform hover:scale-[1.02] active:scale-95 text-[22px] uppercase h-20 shrink-0"
-               >
-                  <span>Ventas</span>
-               </button>
-
-               <button 
-                  onClick={() => { closeAllViews(); setIsMenuOpen(true); }}
-                  className="w-52 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-lg shadow-lg flex items-center justify-center transition-all transform hover:scale-[1.02] active:scale-95 text-[22px] uppercase h-20 shrink-0"
-               >
-                  <span>Menú</span>
-               </button>
+            <div className="hidden md:flex flex-row items-center gap-3 h-24 overflow-x-auto overflow-y-hidden no-scrollbar w-full">
+               <div className="min-w-[200px] flex-1">
+                 <BalcaoBtn />
+               </div>
+               <div className="w-64 shrink-0"><EsperandoBtn /></div>
+               <div className="w-64 shrink-0"><FacturadasBtn /></div>
+               <div className="w-52 shrink-0"><ReporBtn /></div>
+               <div className="w-52 shrink-0"><VentasBtn /></div>
+               <div className="w-52 shrink-0"><MenuBtn /></div>
             </div>
           </div>
           
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-4 items-start pb-10">
+          <div className="grid grid-cols-3 md:grid-cols-5 gap-3 md:gap-6 items-start pb-10">
             {openTables.map(table => (
               <TableCard 
                 key={table.id} 
@@ -296,12 +357,12 @@ const App: React.FC = () => {
             
             <button 
               onClick={addTable}
-              className="flex flex-col items-center justify-center h-44 border-2 border-dashed border-gray-600 rounded-lg bg-gray-800/50 hover:bg-gray-800 hover:border-blue-500 transition-all duration-200 group"
+              className="flex flex-col items-center justify-center h-24 md:h-32 border-2 border-dashed border-gray-600 rounded-lg bg-gray-800/50 hover:bg-gray-800 hover:border-blue-500 transition-all duration-200 group"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-gray-500 group-hover:text-blue-500 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 md:h-8 md:w-8 text-gray-500 group-hover:text-blue-500 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
-              <span className="text-gray-400 font-semibold group-hover:text-blue-500 text-[18px]">Adicionar Mesa</span>
+              <span className="text-gray-400 font-black group-hover:text-blue-500 text-[10px] md:text-[14px] uppercase text-center px-1">Adicionar Mesa</span>
             </button>
           </div>
         </div>

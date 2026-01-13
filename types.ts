@@ -14,6 +14,12 @@ export interface MenuItem {
   price: number;
 }
 
+export interface InventoryItem {
+  id: string;
+  name: string;
+  quantity: number;
+}
+
 export interface TablePayments {
   cash: number;
   pix: number;
@@ -37,6 +43,7 @@ export interface Table {
   payments: TablePayments;
   splitCount: number;
   paymentRecords?: PaymentRecord[];
+  isInvoiced?: boolean;
 }
 
 export interface GlobalTotals {
