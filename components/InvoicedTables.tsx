@@ -9,16 +9,12 @@ interface InvoicedTablesProps {
 }
 
 const InvoicedTables: React.FC<InvoicedTablesProps> = ({ tables, onSelectTable, onBack }) => {
-  const formatCurrency = (val: number) => val.toLocaleString('pt-BR', { 
-    style: 'currency', 
-    currency: 'BRL', 
-    minimumFractionDigits: 0 
-  });
-
+  // Siempre usar 2 decimales para evitar redondeos visuales
   const formatExact = (val: number) => val.toLocaleString('pt-BR', { 
     style: 'currency', 
     currency: 'BRL', 
-    minimumFractionDigits: 2 
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
   });
 
   const methodColors: Record<string, string> = {
@@ -49,41 +45,49 @@ const InvoicedTables: React.FC<InvoicedTablesProps> = ({ tables, onSelectTable, 
             <div 
               key={table.id}
               onClick={() => onSelectTable(table.id)}
-              className="bg-[#242424] hover:bg-[#2d2d2d] border border-gray-800 rounded-xl p-3 md:p-4 flex flex-col md:flex-row items-stretch md:items-center justify-between cursor-pointer transition-all gap-4"
+              className="bg-[#242424] hover:bg-[#2d2d2d] border border-gray-800 rounded-xl p-3 md:p-4 flex items-center justify-between cursor-pointer transition-all gap-2"
             >
               <div className="flex flex-col min-w-0 flex-1">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-white font-black text-[18px] md:text-[32px] uppercase truncate leading-none">{table.name}</span>
-                  <span className="text-[10px] md:text-[14px] text-gray-500 font-bold uppercase">Mesa #{table.number}</span>
+                <div className="flex items-center justify-between gap-2 mb-1.5 md:mb-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="text-white font-black text-[16px] md:text-[32px] uppercase truncate leading-none">{table.name}</span>
+                    <span className="text-[9px] md:text-[14px] text-gray-500 font-bold uppercase shrink-0">#{table.number}</span>
+                  </div>
+                  {/* Total a la derecha en modo teléfono */}
+                  <div className="md:hidden text-right shrink-0">
+                    <span className="text-indigo-400 font-black font-mono text-[18px]">
+                      {formatExact(totalPaid)}
+                    </span>
+                  </div>
                 </div>
                 
-                {/* Indicadores de pago con monto exacto */}
-                <div className="flex flex-wrap gap-2">
-                  {/* // Cast amount to number to fix operator '>' cannot be applied to types 'unknown' and 'number' */}
+                {/* Indicadores de pago */}
+                <div className="flex flex-wrap gap-1.5 md:gap-2">
                   {Object.entries(table.payments).map(([method, amount]) => (amount as number) > 0 && (
-                    <div key={method} className={`${methodColors[method]} ${method === 'pix' ? 'text-black' : 'text-white'} px-2 py-1 rounded-lg flex flex-col items-center min-w-[60px] md:min-w-[80px]`}>
+                    <div key={method} className={`${methodColors[method]} ${method === 'pix' ? 'text-black' : 'text-white'} px-1.5 py-0.5 md:px-2 md:py-1 rounded-md md:rounded-lg flex flex-col items-center min-w-[50px] md:min-w-[80px]`}>
                       <span className="text-[6px] md:text-[9px] font-black uppercase opacity-70">{method === 'cash' ? 'Efectivo' : method}</span>
-                      <span className="text-[10px] md:text-[16px] font-black font-mono leading-none">{formatExact(amount as number)}</span>
+                      <span className="text-[9px] md:text-[16px] font-black font-mono leading-none">{formatExact(amount as number)}</span>
                     </div>
                   ))}
                   {table.manualServiceFee > 0 && (
-                    <div className="bg-blue-600/20 border border-blue-600/40 text-blue-400 px-2 py-1 rounded-lg flex flex-col items-center min-w-[60px] md:min-w-[80px]">
+                    <div className="bg-blue-600/20 border border-blue-600/40 text-blue-400 px-1.5 py-0.5 md:px-2 md:py-1 rounded-md md:rounded-lg flex flex-col items-center min-w-[50px] md:min-w-[80px]">
                       <span className="text-[6px] md:text-[9px] font-black uppercase opacity-70">Taxa</span>
-                      <span className="text-[10px] md:text-[16px] font-black font-mono leading-none">{formatExact(table.manualServiceFee)}</span>
+                      <span className="text-[9px] md:text-[16px] font-black font-mono leading-none">{formatExact(table.manualServiceFee)}</span>
                     </div>
                   )}
                 </div>
               </div>
 
-              <div className="flex items-center gap-4 border-t md:border-t-0 md:border-l border-gray-700 pt-3 md:pt-0 md:pl-6">
+              {/* Total visible solo en desktop para el diseño original */}
+              <div className="hidden md:flex items-center gap-4 border-l border-gray-700 pl-6">
                 <div className="text-right">
                   <span className="text-gray-500 text-[10px] md:text-[14px] block uppercase font-black">Total Pagado</span>
-                  <span className="text-indigo-400 font-black font-mono text-[22px] md:text-[42px] leading-none">
-                    {formatCurrency(totalPaid)}
+                  <span className="text-indigo-400 font-black font-mono text-[42px] leading-none">
+                    {formatExact(totalPaid)}
                   </span>
                 </div>
                 <div className="text-gray-600">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 md:h-8 md:w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
                 </div>

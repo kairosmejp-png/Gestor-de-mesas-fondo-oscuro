@@ -1,15 +1,16 @@
 
 import React from 'react';
-import { Table, GlobalTotals } from '../types';
+import { Table, GlobalTotals, Purchase } from '../types';
 import SummaryPanel from './SummaryPanel';
 
 interface SalesSummaryProps {
   tables: Table[];
+  purchases: Purchase[];
   totals: GlobalTotals;
   onBack: () => void;
 }
 
-const SalesSummary: React.FC<SalesSummaryProps> = ({ tables, totals, onBack }) => {
+const SalesSummary: React.FC<SalesSummaryProps> = ({ tables, purchases, totals, onBack }) => {
   const salesMap = new Map<string, { name: string; quantity: number; totalRevenue: number }>();
 
   // Agrupar productos de todas las mesas
@@ -55,32 +56,53 @@ const SalesSummary: React.FC<SalesSummaryProps> = ({ tables, totals, onBack }) =
         <SummaryPanel totals={totals} />
       </div>
 
-      <div className="bg-[#242424] rounded-lg border border-gray-800 overflow-hidden">
-        <table className="w-full text-left border-collapse">
-          <thead className="bg-[#2d2d2d] text-gray-400 text-[14px] md:text-[19px] uppercase">
-            <tr>
-              <th className="p-3 md:p-4">Producto</th>
-              <th className="p-3 md:p-4 text-center">Unid.</th>
-              <th className="p-3 md:p-4 text-right">Total</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-800">
-            {salesList.map((item, idx) => (
-              <tr key={idx} className="hover:bg-white/5 transition-colors">
-                <td className="p-3 md:p-4 text-white font-bold text-[16px] md:text-[26px] uppercase">{item.name}</td>
-                <td className="p-3 md:p-4 text-center text-gray-300 font-black text-[16px] md:text-[26px]">{item.quantity}</td>
-                <td className="p-3 md:p-4 text-right text-blue-400 font-black font-mono text-[16px] md:text-[26px]">{formatCurrency(item.totalRevenue)}</td>
-              </tr>
-            ))}
-            {salesList.length === 0 && (
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-[#242424] rounded-lg border border-gray-800 overflow-hidden">
+          <h2 className="p-4 bg-[#2d2d2d] text-white font-black uppercase text-[18px]">Desglose de Productos</h2>
+          <table className="w-full text-left border-collapse">
+            <thead className="bg-[#2d2d2d] text-gray-400 text-[14px] md:text-[19px] uppercase">
               <tr>
-                <td colSpan={3} className="p-8 md:p-12 text-center text-gray-600 text-[18px] md:text-[24px] font-bold">
-                  Sin ventas registradas.
-                </td>
+                <th className="p-3 md:p-4">Producto</th>
+                <th className="p-3 md:p-4 text-center">Unid.</th>
+                <th className="p-3 md:p-4 text-right">Total</th>
               </tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-gray-800">
+              {salesList.map((item, idx) => (
+                <tr key={idx} className="hover:bg-white/5 transition-colors">
+                  <td className="p-3 md:p-4 text-white font-bold text-[16px] md:text-[26px] uppercase">{item.name}</td>
+                  <td className="p-3 md:p-4 text-center text-gray-300 font-black text-[16px] md:text-[26px]">{item.quantity}</td>
+                  <td className="p-3 md:p-4 text-right text-blue-400 font-black font-mono text-[16px] md:text-[26px]">{formatCurrency(item.totalRevenue)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="bg-[#242424] rounded-lg border border-gray-800 overflow-hidden">
+          <h2 className="p-4 bg-[#2d2d2d] text-yellow-500 font-black uppercase text-[18px]">Desglose de Compras / Gastos</h2>
+          <table className="w-full text-left border-collapse">
+            <thead className="bg-[#2d2d2d] text-gray-400 text-[14px] md:text-[19px] uppercase">
+              <tr>
+                <th className="p-3 md:p-4">Gasto</th>
+                <th className="p-3 md:p-4 text-right">Total</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-800">
+              {purchases.map((p, idx) => (
+                <tr key={idx} className="hover:bg-white/5 transition-colors">
+                  <td className="p-3 md:p-4 text-white font-bold text-[16px] md:text-[26px] uppercase">{p.description}</td>
+                  <td className="p-3 md:p-4 text-right text-red-400 font-black font-mono text-[16px] md:text-[26px]">{formatCurrency(p.amount)}</td>
+                </tr>
+              ))}
+              {purchases.length === 0 && (
+                <tr>
+                  <td colSpan={2} className="p-8 text-center text-gray-600 font-bold uppercase">Sin gastos.</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

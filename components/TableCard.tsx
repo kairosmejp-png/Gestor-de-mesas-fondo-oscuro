@@ -17,14 +17,14 @@ const TableCard: React.FC<TableCardProps> = ({ table, onClick, onNameChange }) =
   const allDelivered = table.products.length > 0 && table.products.every(p => p.delivered);
   
   // Precio sugerido para visualización
-  // BALCAO: Subtotal + (0.25 * items)
+  // BALCAO: Solo Subtotal (Sin taxa)
   // MESAS: Subtotal + 10%
   const suggestedTotal = isBalcao 
-    ? (subtotal + (totalQty * 0.25)) 
+    ? subtotal
     : (subtotal * 1.1);
 
   const isPaid = isBalcao 
-    ? (subtotal > 0 && totalPayments >= (subtotal + (totalQty * 0.25)))
+    ? (subtotal > 0 && totalPayments >= subtotal)
     : (subtotal > 0 && totalPayments >= subtotal);
 
   const formatCurrency = (val: number) => Math.round(val).toLocaleString('pt-BR', { 

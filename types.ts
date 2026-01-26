@@ -20,6 +20,14 @@ export interface InventoryItem {
   quantity: number;
 }
 
+export interface Purchase {
+  id: string;
+  description: string;
+  amount: number;
+  method: keyof TablePayments;
+  createdAt: number;
+}
+
 export interface TablePayments {
   cash: number;
   pix: number;
@@ -53,4 +61,5 @@ export interface GlobalTotals {
   totalPix: number;
   totalDebit: number;
   totalCredit: number;
+  totalPurchases: number;
 }

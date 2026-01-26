@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Table, Product, GlobalTotals, MenuItem, InventoryItem } from './types';
+import { Table, Product, GlobalTotals, MenuItem, InventoryItem, Purchase } from './types';
 import TableCard from './components/TableCard';
 import TableDetail from './components/TableDetail';
 import MenuManager from './components/MenuManager';
@@ -8,26 +8,31 @@ import SalesSummary from './components/SalesSummary';
 import WaitingList from './components/WaitingList';
 import InvoicedTables from './components/InvoicedTables';
 import InventoryManager from './components/InventoryManager';
+import PurchasesManager from './components/PurchasesManager';
 
 const STORAGE_KEY = 'gestor_mesas_pro_data';
 const MENU_STORAGE_KEY = 'gestor_mesas_pro_menu';
 const INVENTORY_STORAGE_KEY = 'gestor_mesas_pro_inventory';
+const PURCHASES_STORAGE_KEY = 'gestor_mesas_pro_purchases';
 
 const App: React.FC = () => {
   const [tables, setTables] = useState<Table[]>([]);
   const [menu, setMenu] = useState<MenuItem[]>([]);
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
+  const [purchases, setPurchases] = useState<Purchase[]>([]);
   const [selectedTableId, setSelectedTableId] = useState<string | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSalesOpen, setIsSalesOpen] = useState(false);
   const [isWaitingOpen, setIsWaitingOpen] = useState(false);
   const [isInvoicedTablesOpen, setIsInvoicedTablesOpen] = useState(false);
   const [isInventoryOpen, setIsInventoryOpen] = useState(false);
+  const [isPurchasesOpen, setIsPurchasesOpen] = useState(false);
 
   useEffect(() => {
     const savedTables = localStorage.getItem(STORAGE_KEY);
     const savedMenu = localStorage.getItem(MENU_STORAGE_KEY);
     const savedInventory = localStorage.getItem(INVENTORY_STORAGE_KEY);
+    const savedPurchases = localStorage.getItem(PURCHASES_STORAGE_KEY);
     
     let currentTables: Table[] = [];
     if (savedTables) {
@@ -46,6 +51,14 @@ const App: React.FC = () => {
       }
     }
 
+    if (savedPurchases) {
+      try {
+        setPurchases(JSON.parse(savedPurchases));
+      } catch (e) {
+        console.error("Error loading purchases", e);
+      }
+    }
+
     if (savedMenu) {
       try {
         setMenu(JSON.parse(savedMenu));
@@ -55,8 +68,9 @@ const App: React.FC = () => {
     } else {
       const initialMenu: MenuItem[] = [
         { id: crypto.randomUUID(), name: 'REFRIGERANTE', price: 8 },
-        { id: crypto.randomUUID(), name: 'AGUA', price: 5 },
+        { id: crypto.randomUUID(), name: 'AGUA C/S GAS', price: 5 },
         { id: crypto.randomUUID(), name: 'LATA SUCO', price: 10 },
+        { id: crypto.randomUUID(), name: 'SUCO NATURAL', price: 15 },
         { id: crypto.randomUUID(), name: 'LATAO CERVEJA', price: 13 },
         { id: crypto.randomUUID(), name: 'LONGNECK CERVEJA', price: 15 },
         { id: crypto.randomUUID(), name: 'HEINEKEN 600ML', price: 22 },
@@ -88,14 +102,31 @@ const App: React.FC = () => {
         { id: crypto.randomUUID(), name: 'ISCA DE PEIXE', price: 60 },
         { id: crypto.randomUUID(), name: 'ISCA DE FRANGO', price: 60 },
         { id: crypto.randomUUID(), name: 'ESPETINHO', price: 15 },
-        { id: crypto.randomUUID(), name: 'PIZZA MUSSARELA', price: 65 },
-        { id: crypto.randomUUID(), name: 'PIZZA PRESUNTO', price: 70 },
-        { id: crypto.randomUUID(), name: 'PIZZA MARGHERITA', price: 70 },
-        { id: crypto.randomUUID(), name: 'PIZZA CALABRESA', price: 70 },
-        { id: crypto.randomUUID(), name: 'PIZZA FRANGO E CATUPIRY', price: 80 },
-        { id: crypto.randomUUID(), name: 'PIZZA PORTUGUESA', price: 90 },
-        { id: crypto.randomUUID(), name: 'PIZZA PEITO DE PERU', price: 120 },
+        { id: crypto.randomUUID(), name: 'PZZ MUSSARELA', price: 65 },
+        { id: crypto.randomUUID(), name: 'PZZ PRESUNTO', price: 70 },
+        { id: crypto.randomUUID(), name: 'PZZ MARGHERITA', price: 70 },
+        { id: crypto.randomUUID(), name: 'PZZ CALABRESA', price: 70 },
+        { id: crypto.randomUUID(), name: 'PZZ FRANGO E CATUPIRY', price: 80 },
+        { id: crypto.randomUUID(), name: 'PZZ PORTUGUESA', price: 90 },
+        { id: crypto.randomUUID(), name: 'PZZ PEITO DE PERU', price: 120 },
+        { id: crypto.randomUUID(), name: 'PZZ PORTU/FRANGO', price: 90 },
+        { id: crypto.randomUUID(), name: 'PZZ PORTU/PRESUNTO', price: 90 },
+        { id: crypto.randomUUID(), name: 'PZZ PORTU/MUSSA', price: 90 },
+        { id: crypto.randomUUID(), name: 'PZZ PORTU/MARGUERITE', price: 90 },
+        { id: crypto.randomUUID(), name: 'PZZ PORTU/CALA', price: 90 },
+        { id: crypto.randomUUID(), name: 'PZZ FRANGO/CALA', price: 80 },
+        { id: crypto.randomUUID(), name: 'PZZ FRANGO/MARGUERITE', price: 80 },
+        { id: crypto.randomUUID(), name: 'PZZ FRANGO/MUSSA', price: 80 },
+        { id: crypto.randomUUID(), name: 'PZZ FRANGO/PRESUNTO', price: 80 },
+        { id: crypto.randomUUID(), name: 'PZZ CALA/MARGUERITE', price: 70 },
+        { id: crypto.randomUUID(), name: 'PZZ CALA/MUSSA', price: 70 },
+        { id: crypto.randomUUID(), name: 'PZZ CALA/PRESUNTO', price: 70 },
+        { id: crypto.randomUUID(), name: 'PZZ MARGUERITE/MUSSA', price: 70 },
+        { id: crypto.randomUUID(), name: 'PZZ MARGUERITE/PRESUNTO', price: 70 },
+        { id: crypto.randomUUID(), name: 'PZZ PRESUNTO/MUSSA', price: 70 },
         { id: crypto.randomUUID(), name: 'FILE MIGNON', price: 70 },
+        { id: crypto.randomUUID(), name: 'FILE DE FRANGO', price: 50 },
+        { id: crypto.randomUUID(), name: 'FILE DE PEIXE', price: 60 },
         { id: crypto.randomUUID(), name: 'COXA E SOBRE COXA', price: 40 },
         { id: crypto.randomUUID(), name: 'CONTRA FILE', price: 50 },
         { id: crypto.randomUUID(), name: 'CHURRASCO MISTO', price: 50 },
@@ -147,8 +178,12 @@ const App: React.FC = () => {
     localStorage.setItem(INVENTORY_STORAGE_KEY, JSON.stringify(inventory));
   }, [inventory]);
 
+  useEffect(() => {
+    localStorage.setItem(PURCHASES_STORAGE_KEY, JSON.stringify(purchases));
+  }, [purchases]);
+
   const globalTotals = useMemo<GlobalTotals>(() => {
-    return tables.reduce((acc, t) => {
+    const totals = tables.reduce((acc, t) => {
       const tablePaymentsSum = t.payments.cash + t.payments.pix + t.payments.debit + t.payments.credit;
       acc.totalBilled += tablePaymentsSum;
       acc.totalServiceFee += t.manualServiceFee;
@@ -163,9 +198,20 @@ const App: React.FC = () => {
       totalCash: 0,
       totalPix: 0,
       totalDebit: 0,
-      totalCredit: 0
+      totalCredit: 0,
+      totalPurchases: 0
     });
-  }, [tables]);
+
+    purchases.forEach(p => {
+      totals.totalPurchases += p.amount;
+      if (p.method === 'cash') totals.totalCash -= p.amount;
+      else if (p.method === 'pix') totals.totalPix -= p.amount;
+      else if (p.method === 'debit') totals.totalDebit -= p.amount;
+      else if (p.method === 'credit') totals.totalCredit -= p.amount;
+    });
+
+    return totals;
+  }, [tables, purchases]);
 
   const addTable = () => {
     const nextNumber = tables.length > 0 ? Math.max(...tables.filter(t => t.id !== 'table-ventanilla' && !t.isInvoiced).map(t => t.number), 0) + 1 : 1;
@@ -188,14 +234,14 @@ const App: React.FC = () => {
     const totalPayments = (Object.values(updatedTable.payments) as number[]).reduce((a, b) => a + b, 0);
     const allDelivered = updatedTable.products.length > 0 && updatedTable.products.every(p => p.delivered);
     
-    const isPaid = updatedTable.id === 'table-ventanilla'
-      ? (updatedTable.manualTotal > 0 && totalPayments >= updatedTable.manualTotal)
-      : (subtotal > 0 && totalPayments >= subtotal);
-
+    const isBalcao = updatedTable.id === 'table-ventanilla' || updatedTable.name === 'BALCAO';
+    const actualExcedente = isBalcao ? 0 : Math.max(0, totalPayments - subtotal);
+    
+    const isPaid = (subtotal > 0 && totalPayments >= subtotal);
     const isBlue = allDelivered && isPaid;
 
     let shouldReturnToDashboard = false;
-    let finalTable = { ...updatedTable };
+    let finalTable = { ...updatedTable, manualServiceFee: actualExcedente };
 
     if (updatedTable.id !== 'table-ventanilla') {
       if (!updatedTable.isInvoiced && isBlue) {
@@ -230,6 +276,7 @@ const App: React.FC = () => {
     setIsWaitingOpen(false);
     setIsInvoicedTablesOpen(false);
     setIsInventoryOpen(false);
+    setIsPurchasesOpen(false);
   };
 
   const selectedTable = tables.find(t => t.id === selectedTableId);
@@ -249,25 +296,31 @@ const App: React.FC = () => {
     : 0;
 
   const ReporBtn = () => (
-    <button onClick={() => { closeAllViews(); setIsInventoryOpen(true); }} className="w-full bg-amber-600 hover:bg-amber-700 text-white font-black rounded-lg shadow-lg flex items-center justify-center transition-all transform active:scale-95 text-[18px] md:text-[22px] uppercase h-14 md:h-20">
-      <span>Repor</span>
+    <button onClick={() => { closeAllViews(); setIsInventoryOpen(true); }} className="w-full bg-amber-600 hover:bg-amber-700 text-white font-black rounded-lg shadow-lg flex items-center justify-center transition-all transform active:scale-95 text-[18px] md:text-[22px] uppercase h-14 md:h-20 px-6 md:px-8">
+      <span>Reponer</span>
+    </button>
+  );
+
+  const ComprasBtn = () => (
+    <button onClick={() => { closeAllViews(); setIsPurchasesOpen(true); }} className="w-full bg-yellow-400 hover:bg-yellow-500 text-black font-black rounded-lg shadow-lg flex items-center justify-center transition-all transform active:scale-95 text-[18px] md:text-[22px] uppercase h-14 md:h-20 px-6 md:px-8">
+      <span>Compras</span>
     </button>
   );
 
   const VentasBtn = () => (
-    <button onClick={() => { closeAllViews(); setIsSalesOpen(true); }} className="w-full bg-green-600 hover:bg-green-700 text-white font-black rounded-lg shadow-lg flex items-center justify-center transition-all transform active:scale-95 text-[18px] md:text-[22px] uppercase h-14 md:h-20">
+    <button onClick={() => { closeAllViews(); setIsSalesOpen(true); }} className="w-full bg-green-600 hover:bg-green-700 text-white font-black rounded-lg shadow-lg flex items-center justify-center transition-all transform active:scale-95 text-[18px] md:text-[22px] uppercase h-14 md:h-20 px-6 md:px-8">
       <span>Ventas</span>
     </button>
   );
 
   const MenuBtn = () => (
-    <button onClick={() => { closeAllViews(); setIsMenuOpen(true); }} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-black rounded-lg shadow-lg flex items-center justify-center transition-all transform active:scale-95 text-[18px] md:text-[22px] uppercase h-14 md:h-20">
+    <button onClick={() => { closeAllViews(); setIsMenuOpen(true); }} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-black rounded-lg shadow-lg flex items-center justify-center transition-all transform active:scale-95 text-[18px] md:text-[22px] uppercase h-14 md:h-20 px-6 md:px-8">
       <span>Menú</span>
     </button>
   );
 
   const EsperandoBtn = () => (
-    <button onClick={() => { closeAllViews(); setIsWaitingOpen(true); }} className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-lg shadow-lg flex items-center justify-center gap-2 transition-all transform active:scale-95 text-[18px] md:text-[22px] uppercase px-4 h-14 md:h-20">
+    <button onClick={() => { closeAllViews(); setIsWaitingOpen(true); }} className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-lg shadow-lg flex items-center justify-center gap-2 transition-all transform active:scale-95 text-[18px] md:text-[22px] uppercase h-14 md:h-20 px-4 md:px-8">
       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 md:h-7 md:w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
       </svg>
@@ -276,7 +329,7 @@ const App: React.FC = () => {
   );
 
   const FacturadasBtn = () => (
-    <button onClick={() => { closeAllViews(); setIsInvoicedTablesOpen(true); }} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-lg shadow-lg flex items-center justify-center transition-all transform active:scale-95 text-[18px] md:text-[24px] uppercase px-4 h-14 md:h-20">
+    <button onClick={() => { closeAllViews(); setIsInvoicedTablesOpen(true); }} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-lg shadow-lg flex items-center justify-center transition-all transform active:scale-95 text-[18px] md:text-[24px] uppercase h-14 md:h-20 px-4 md:px-8">
       <span>Facturadas</span>
     </button>
   );
@@ -301,8 +354,10 @@ const App: React.FC = () => {
         <MenuManager menu={menu} onUpdate={setMenu} onBack={closeAllViews} />
       ) : isInventoryOpen ? (
         <InventoryManager inventory={inventory} onUpdate={setInventory} onBack={closeAllViews} />
+      ) : isPurchasesOpen ? (
+        <PurchasesManager menu={menu} purchases={purchases} onUpdate={setPurchases} onBack={closeAllViews} />
       ) : isSalesOpen ? (
-        <SalesSummary tables={tables} totals={globalTotals} onBack={closeAllViews} />
+        <SalesSummary tables={tables} purchases={purchases} totals={globalTotals} onBack={closeAllViews} />
       ) : isWaitingOpen ? (
         <WaitingList tables={tables} onUpdateTable={updateTable} onBack={closeAllViews} />
       ) : isInvoicedTablesOpen ? (
@@ -328,20 +383,26 @@ const App: React.FC = () => {
                 <EsperandoBtn />
                 <FacturadasBtn />
               </div>
-              <div className="w-full">
-                <BalcaoBtn />
+              <div className="flex gap-2 w-full">
+                <div className="flex-1 min-w-0">
+                  <BalcaoBtn />
+                </div>
+                <div className="shrink-0 w-fit">
+                  <ComprasBtn />
+                </div>
               </div>
             </div>
 
             <div className="hidden md:flex flex-row items-center gap-3 h-24 overflow-x-auto overflow-y-hidden no-scrollbar w-full">
-               <div className="min-w-[200px] flex-1">
+               <div className="flex-1 min-w-[200px]">
                  <BalcaoBtn />
                </div>
-               <div className="w-64 shrink-0"><EsperandoBtn /></div>
-               <div className="w-64 shrink-0"><FacturadasBtn /></div>
-               <div className="w-52 shrink-0"><ReporBtn /></div>
-               <div className="w-52 shrink-0"><VentasBtn /></div>
-               <div className="w-52 shrink-0"><MenuBtn /></div>
+               <div className="shrink-0 w-fit"><EsperandoBtn /></div>
+               <div className="shrink-0 w-fit"><FacturadasBtn /></div>
+               <div className="shrink-0 w-fit"><ComprasBtn /></div>
+               <div className="shrink-0 w-fit"><ReporBtn /></div>
+               <div className="shrink-0 w-fit"><VentasBtn /></div>
+               <div className="shrink-0 w-fit"><MenuBtn /></div>
             </div>
           </div>
           
