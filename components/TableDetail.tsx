@@ -201,16 +201,16 @@ const TableDetail: React.FC<TableDetailProps> = ({ table, menu, onBack, onUpdate
         </div>
       </div>
 
-      <div className="bg-[#242424] rounded-lg border border-gray-800 overflow-hidden relative w-full mb-8 shadow-inner">
+      <div className="bg-[#242424] rounded-lg border border-gray-800 overflow-visible relative w-full mb-8 shadow-inner">
         <table className="w-full text-left border-collapse table-fixed">
-          <thead className="bg-[#2d2d2d] text-gray-400 text-[10px] md:text-[16px] uppercase font-black">
+          <thead className="bg-[#2d2d2d] text-gray-400 text-[9px] md:text-[14px] uppercase font-black">
             <tr>
-              <th className="p-2 w-[10%] md:w-16 text-center">OK</th>
-              <th className="p-2 w-[18%] md:w-24 text-center">Cant.</th>
-              <th className="p-2 w-[34%]">Item</th>
-              <th className="p-2 w-[18%] text-right">Unit.</th>
-              <th className="p-2 w-[12%] text-right">Total</th>
-              <th className="p-2 w-[8%] md:w-16"></th>
+              <th className="p-1 w-6 md:w-10 text-center">OK</th>
+              <th className="p-1 w-8 md:w-12 text-center">CC</th>
+              <th className="p-1">Item</th>
+              <th className="p-1 w-12 md:w-20 text-right">PC</th>
+              <th className="p-1 w-12 md:w-24 text-right">TT</th>
+              <th className="p-1 w-6 md:w-10"></th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-800">
@@ -221,26 +221,26 @@ const TableDetail: React.FC<TableDetailProps> = ({ table, menu, onBack, onUpdate
 
               return (
                 <tr key={prod.id} className="hover:bg-white/5 transition-colors">
-                  <td className="p-2">
+                  <td className="p-1">
                     <div className="flex justify-center">
                       <button 
                         onClick={() => updateProduct(prod.id, { delivered: !prod.delivered })}
-                        className={`w-6 h-6 md:w-10 md:h-10 rounded flex items-center justify-center transition-all ${prod.delivered ? 'bg-green-600' : 'bg-red-600'} active:scale-90`}
+                        className={`w-5 h-5 md:w-8 md:h-8 rounded flex items-center justify-center transition-all ${prod.delivered ? 'bg-green-600' : 'bg-red-600'} active:scale-90`}
                       >
-                        {prod.delivered && <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 md:h-6 md:w-6 text-white" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>}
+                        {prod.delivered && <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 md:h-5 md:w-5 text-white" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>}
                       </button>
                     </div>
                   </td>
-                  <td className="p-2">
+                  <td className="p-1">
                     <input 
                       type="number" 
                       step="1" 
                       value={prod.quantity} 
                       onChange={(e) => updateProduct(prod.id, { quantity: Number(e.target.value) })} 
-                      className="bg-gray-800 border-none rounded p-2 w-full text-center focus:ring-1 focus:ring-blue-500 font-black text-[20px] md:text-[28px]" 
+                      className="bg-gray-800 border-none rounded p-1 w-full text-center focus:ring-1 focus:ring-blue-500 font-black text-[14px] md:text-[22px]" 
                     />
                   </td>
-                  <td className="p-2 relative">
+                  <td className="p-1 relative">
                     <input 
                       type="text" 
                       placeholder="..." 
@@ -250,34 +250,34 @@ const TableDetail: React.FC<TableDetailProps> = ({ table, menu, onBack, onUpdate
                         setActiveSuggestionId(prod.id);
                       }} 
                       onFocus={() => setActiveSuggestionId(prod.id)}
-                      className="bg-transparent border-none rounded p-1 w-full focus:ring-1 focus:ring-blue-500 font-bold placeholder:text-gray-700 text-[12px] md:text-[28px] uppercase truncate" 
+                      className="bg-transparent border-none rounded p-1 w-full focus:ring-1 focus:ring-blue-500 font-bold placeholder:text-gray-700 text-[12px] md:text-[24px] uppercase truncate" 
                     />
                     {activeSuggestionId === prod.id && prod.description.trim().length > 0 && filteredSuggestions.length > 0 && (
-                      <div ref={suggestionRef} className="absolute left-0 right-[-100px] bottom-full mb-2 bg-[#2d2d2d] border-2 border-blue-500 rounded-lg shadow-2xl z-[9999] max-h-[300px] md:max-h-[450px] overflow-y-auto no-scrollbar">
+                      <div ref={suggestionRef} className="absolute left-0 right-[-100px] top-full mt-1 bg-[#2d2d2d] border-2 border-blue-500 rounded-lg shadow-2xl z-[9999] max-h-[300px] md:max-h-[400px] overflow-y-auto no-scrollbar">
                         {filteredSuggestions.map(item => (
-                          <div key={item.id} onClick={() => selectSuggestion(prod.id, item)} className="p-2 md:p-4 hover:bg-blue-600 cursor-pointer flex justify-between items-center border-b border-gray-800 last:border-none">
-                            <span className="text-white font-black text-[12px] md:text-[22px] uppercase">{item.name}</span>
-                            <span className="text-blue-300 font-mono text-[11px] md:text-[18px] font-black">{formatCurrency(item.price)}</span>
+                          <div key={item.id} onClick={() => selectSuggestion(prod.id, item)} className="p-2 md:p-3 hover:bg-blue-600 cursor-pointer flex justify-between items-center border-b border-gray-800 last:border-none">
+                            <span className="text-white font-black text-[11px] md:text-[18px] uppercase">{item.name}</span>
+                            <span className="text-blue-300 font-mono text-[10px] md:text-[16px] font-black">{formatCurrency(item.price)}</span>
                           </div>
                         ))}
                       </div>
                     )}
                   </td>
-                  <td className="p-2 text-right">
+                  <td className="p-1 text-right">
                     <input 
                       type="number" 
                       step="0.01" 
                       value={prod.unitPrice} 
                       onChange={(e) => updateProduct(prod.id, { unitPrice: Number(e.target.value) })} 
-                      className="bg-gray-800 border-none rounded p-2 w-full text-right focus:ring-1 focus:ring-blue-500 font-black text-[18px] md:text-[28px]" 
+                      className="bg-gray-800 border-none rounded p-1 w-full text-right focus:ring-1 focus:ring-blue-500 font-black text-[14px] md:text-[22px]" 
                     />
                   </td>
-                  <td className="p-2 text-right font-mono text-blue-400 font-black text-[12px] md:text-[24px] truncate">
+                  <td className="p-1 text-right font-mono text-blue-400 font-black text-[12px] md:text-[20px] truncate">
                     {Math.round(prod.quantity * prod.unitPrice)}
                   </td>
-                  <td className="p-2 text-center">
-                    <button onClick={() => deleteProduct(prod.id)} className="text-gray-600 hover:text-red-500 p-1 transition-colors">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 md:h-8 md:w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <td className="p-1 text-center">
+                    <button onClick={() => deleteProduct(prod.id)} className="text-gray-600 hover:text-red-500 p-0.5 transition-colors">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 md:h-6 md:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                       </svg>
                     </button>
@@ -287,8 +287,8 @@ const TableDetail: React.FC<TableDetailProps> = ({ table, menu, onBack, onUpdate
             })}
           </tbody>
         </table>
-        <button onClick={handleAddProduct} className="w-full p-4 md:p-6 bg-gray-800/30 hover:bg-gray-800 text-gray-400 flex items-center justify-center gap-2 md:gap-3 border-t border-gray-800 font-black text-[18px] md:text-[28px] uppercase transition-colors">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 md:h-8 md:w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
+        <button onClick={handleAddProduct} className="w-full p-3 md:p-4 bg-gray-800/30 hover:bg-gray-800 text-gray-400 flex items-center justify-center gap-2 border-t border-gray-800 font-black text-[16px] md:text-[24px] uppercase transition-colors">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 md:h-7 md:w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
           Adicionar Producto
         </button>
       </div>

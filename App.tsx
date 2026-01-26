@@ -234,11 +234,12 @@ const App: React.FC = () => {
     const totalPayments = (Object.values(updatedTable.payments) as number[]).reduce((a, b) => a + b, 0);
     const allDelivered = updatedTable.products.length > 0 && updatedTable.products.every(p => p.delivered);
     
-    const isBalcao = updatedTable.id === 'table-ventanilla' || updatedTable.name === 'BALCAO';
-    const actualExcedente = isBalcao ? 0 : Math.max(0, totalPayments - subtotal);
+    // Ahora permitimos excedente en BALCAO para que se sume a la Taxa global
+    const actualExcedente = Math.max(0, totalPayments - subtotal);
     
     const isPaid = (subtotal > 0 && totalPayments >= subtotal);
-    const isBlue = allDelivered && isPaid;
+    const allDeliveredValid = updatedTable.products.length > 0 && updatedTable.products.every(p => p.delivered);
+    const isBlue = allDeliveredValid && isPaid;
 
     let shouldReturnToDashboard = false;
     let finalTable = { ...updatedTable, manualServiceFee: actualExcedente };
